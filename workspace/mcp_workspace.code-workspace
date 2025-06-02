@@ -1,0 +1,31 @@
+{
+    "folders": [
+        {
+            "name": "mcp_auto_pr",
+            "path": ".."
+        },
+        {
+            "name": "mcp_shared_lib", 
+            "path": "../../mcp_shared_lib"
+        },
+        {
+            "name": "mcp_change_analyzer",
+            "path": "../../mcp_change_analyzer"
+        },
+        {
+            "name": "mcp_pr_recommender",
+            "path": "../../mcp_pr_recommender"
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "../../venv/bin/python",
+        "python.terminal.activateEnvironment": true
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.pylint", 
+            "ms-python.black-formatter"
+        ]
+    }
+}
