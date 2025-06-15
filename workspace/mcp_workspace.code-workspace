@@ -5,12 +5,12 @@
             "path": ".."
         },
         {
-            "name": "mcp_shared_lib", 
+            "name": "mcp_shared_lib",
             "path": "../../mcp_shared_lib"
         },
         {
-            "name": "mcp_change_analyzer",
-            "path": "../../mcp_change_analyzer"
+            "name": "mcp_local_repo_analyzer",
+            "path": "../../mcp_local_repo_analyzer"
         },
         {
             "name": "mcp_pr_recommender",
@@ -18,14 +18,20 @@
         }
     ],
     "settings": {
-        "python.defaultInterpreterPath": "../../venv/bin/python",
-        "python.terminal.activateEnvironment": true
+        "python.defaultInterpreterPath": "../../.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.extraPaths": [
+            "../../mcp_shared_lib/src",
+            "../../mcp_local_repo_analyzer/src",
+            "../../mcp_pr_recommender/src"
+        ]
     },
     "extensions": {
         "recommendations": [
             "ms-python.python",
-            "ms-python.pylint", 
-            "ms-python.black-formatter"
+            "ms-python.pylint",
+            "ms-python.black-formatter",
+            "ms-python.isort"
         ]
     }
 }

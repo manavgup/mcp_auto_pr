@@ -27,6 +27,37 @@ Modular MCP Servers for GitHub Repo Analysis and PR Recommendation
 *   All MCP servers are implemented using the FastMCP framework and adhere to its best practices.
 *   The solution can be run and tested within the existing multi-root VSCode workspace.
 
+## Detailed Implementation Plan
+
+### Phase 1: Refactor `mcp_change_analyzer` to use `FastMCP`
+
+1.  **Modify `src/server.py`:**
+    *   Import `FastMCP` and the `mcp.tool` decorator from `fastmcp`.
+    *   Replace the `FastAPI` app instantiation with `FastMCP` server instantiation.
+    *   Migrate existing tools (e.g., `directory_analyzer`, `repo_analyzer`, `metrics_collector`) to be registered with the `FastMCP` server using the `@mcp.tool()` decorator. This will involve importing the tool classes and decorating their `execute` methods or the classes themselves if they are callable.
+    *   Remove the manual FastAPI routes for `/tools` and `/tools/{tool_name}` as `FastMCP` handles tool exposure automatically.
+    *   Adjust the `if __name__ == "__main__":` block to run the `FastMCP` server.
+    *   Integrate `Telemetry` and `StateManager` with `FastMCP`'s lifecycle hooks (e.g., using the `lifespan` argument in the `FastMCP` constructor) or adapt them to work within the `FastMCP` context.
+    *   Review and adapt error handling and CORS middleware to `FastMCP`'s structure, as `FastMCP` is built on FastAPI and should largely be compatible.
+
+2.  **Review and update tool implementations:**
+    *   Ensure that the `execute` methods of the tools (`directory_analyzer`, `repo_analyzer`, `metrics_collector`) are compatible with how `FastMCP` expects tools to be defined, particularly regarding type hints for argument validation.
+
+### Phase 2: Testing the FastMCP-based server
+
+1.  **Unit Tests:**
+    *   Ensure existing unit tests for individual tools still pass after the refactoring.
+    *   Add new unit tests for the `FastMCP` server's startup and shutdown logic if custom lifespan functions are implemented.
+
+2.  **Integration Tests (MCP Client Interaction):**
+    *   Create a new test file (e.g., `tests/integration/test_fastmcp_server.py`).
+    *   Use `pytest` with `httpx` (already a dependency in `pyproject.toml`) to send HTTP requests to the running `FastMCP` server.
+    *   Test the `/health` endpoint to confirm the server is running.
+    *   Test the `/tools` endpoint (provided by `FastMCP`) to verify that all expected tools are listed with their correct schemas.
+    *   Test the execution of each tool (e.g., `directory_analyzer`, `repo_analyzer`, `metrics_collector`) by sending POST requests to the `FastMCP`'s tool execution endpoint (typically `/tools/{tool_name}`).
+    *   Verify the responses, including the `result` and `metadata`.
+    *   Consider using `pytest-asyncio` for asynchronous tests if the tool execution involves `await` calls.
+
 ## Technology Decisions
 
 *   **Framework:** FastMCP (Python-based) for building modular servers.
