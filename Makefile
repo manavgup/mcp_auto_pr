@@ -22,6 +22,8 @@ help:
 	@echo "════════════════════════════════════════════════════"
 	@echo "🏗️  SETUP & INSTALLATION"
 	@echo "  setup-workspace    - Initialize entire workspace"
+	@echo "  setup-auto         - Auto-clone all repos and setup"
+	@echo "  test-setup         - Test if workspace is properly setup"
 	@echo "  install-all        - Install all repo dependencies"
 	@echo "  update-all         - Update all repo dependencies"
 	@echo ""
@@ -48,7 +50,15 @@ help:
 # =============================================================================
 # 🏗️ SETUP & INSTALLATION
 # =============================================================================
-.PHONY: setup-workspace install-all update-all check-repos
+.PHONY: setup-workspace setup-auto test-setup install-all update-all check-repos
+
+setup-auto:
+	@echo "🚀 Auto-setting up MCP workspace..."
+	@./scripts/setup-workspace.sh
+
+test-setup:
+	@echo "🧪 Testing workspace setup..."
+	@./scripts/test-setup.sh
 
 check-repos:
 	@echo "🔍 Checking workspace structure..."
