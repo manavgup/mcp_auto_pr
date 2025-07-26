@@ -13,6 +13,10 @@ AUTO_PR := $(WORKSPACE_ROOT)/mcp_auto_pr
 # All repo directories
 REPOS := $(SHARED_LIB) $(LOCAL_ANALYZER) $(PR_RECOMMENDER) $(AUTO_PR)
 
+# Server ports (configurable)
+ANALYZER_PORT := 8001
+RECOMMENDER_PORT := 8002
+
 # =============================================================================
 # 📖 HELP
 # =============================================================================
@@ -39,9 +43,10 @@ help:
 	@echo "  format-all         - Format code across all repos"
 	@echo ""
 	@echo "▶️  SERVICES"
-	@echo "  serve-analyzer     - Start local repo analyzer"
-	@echo "  serve-recommender  - Start PR recommender"
+	@echo "  serve-analyzer     - Start local repo analyzer (port $(ANALYZER_PORT))"
+	@echo "  serve-recommender  - Start PR recommender (port $(RECOMMENDER_PORT))"
 	@echo "  serve-all          - Start all MCP servers"
+	@echo "  check-servers      - Check if servers can be started"
 	@echo ""
 	@echo "🧹 CLEANUP"
 	@echo "  clean-all          - Clean all repos"
@@ -145,20 +150,44 @@ format-all:
 # =============================================================================
 # ▶️ SERVICES
 # =============================================================================
-.PHONY: serve-analyzer serve-recommender serve-all
+.PHONY: serve-analyzer serve-recommender serve-all check-servers stop-servers
+
+check-servers:
+	@echo "🔍 Checking server entry points..."
+	@echo "Analyzer:"
+	@cd $(LOCAL_ANALYZER) && ls -la src/mcp_local_repo_analyzer/ | grep -E "(main\.py|__main__\.py|server\.py)" || echo "  No main files found"
+	@echo "Recommender:"
+	@cd $(PR_RECOMMENDER) && ls -la src/mcp_pr_recommender/ | grep -E "(main\.py|__main__\.py|server\.py)" || echo "  No main files found"
+	@echo ""
+	@echo "Checking for entry points in pyproject.toml:"
+	@cd $(LOCAL_ANALYZER) && grep -A 5 "scripts\]" pyproject.toml 2>/dev/null || echo "  No scripts in analyzer"
+	@cd $(PR_RECOMMENDER) && grep -A 5 "scripts\]" pyproject.toml 2>/dev/null || echo "  No scripts in recommender"
 
 serve-analyzer:
-	@echo "🚀 Starting local repo analyzer..."
-	@cd $(LOCAL_ANALYZER) && poetry run python -m local_git_analyzer
+	@echo "🚀 Starting local repo analyzer on port $(ANALYZER_PORT)..."
+	@echo "Using CLI entry point: local-git-analyzer"
+	@cd $(LOCAL_ANALYZER) && poetry run local-git-analyzer
 
 serve-recommender:
-	@echo "🚀 Starting PR recommender..."
-	@cd $(PR_RECOMMENDER) && poetry run python -m pr_recommender
+	@echo "🚀 Starting PR recommender on port $(RECOMMENDER_PORT)..."
+	@echo "Using CLI entry point: pr-recommender"
+	@cd $(PR_RECOMMENDER) && poetry run pr-recommender
 
 serve-all:
 	@echo "🚀 Starting all MCP servers..."
-	@echo "🚧 Multi-server startup not yet implemented"
-	@echo "💡 Start servers individually with serve-analyzer, serve-recommender"
+	@echo "💡 This will start servers in background. Use 'make stop-servers' to stop them."
+	@$(MAKE) serve-analyzer &
+	@sleep 2
+	@$(MAKE) serve-recommender &
+	@echo "✅ All servers starting..."
+	@echo "📋 Check status with: curl http://localhost:$(ANALYZER_PORT)/health"
+	@echo "📋 Check status with: curl http://localhost:$(RECOMMENDER_PORT)/health"
+
+stop-servers:
+	@echo "🛑 Stopping MCP servers..."
+	@pkill -f "mcp_local_repo_analyzer" || echo "Analyzer not running"
+	@pkill -f "mcp_pr_recommender" || echo "Recommender not running"
+	@echo "✅ Servers stopped"
 
 # =============================================================================
 # 🧹 CLEANUP
