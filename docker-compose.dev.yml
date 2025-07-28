@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # Development overrides for live coding
+  repo-analyzer:
+    volumes:
+      - ../mcp_local_repo_analyzer:/app/src:ro  # Mount source for development
+      - ${WORKSPACE_DIR:-../mcp_workspace}:/workspace:ro
+    environment:
+      - PYTHON_ENV=development
+      - RELOAD=true
+
+  pr-recommender:
+    volumes:
+      - ../mcp_pr_recommender:/app/src:ro  # Mount source for development
+    environment:
+      - PYTHON_ENV=development
+      - RELOAD=true
+
+  mcp-gateway:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - RELOAD=true

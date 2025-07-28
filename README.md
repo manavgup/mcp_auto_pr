@@ -1,21 +1,37 @@
 # MCP Auto PR System
 
-Automatically creates pull requests based on outstanding code changes across repositories.
+**Intelligent PR boundary detection and recommendation system powered by Model Context Protocol (MCP)**
 
-## Repository Architecture
+Automatically analyzes outstanding code changes and generates atomic, logically-grouped pull request recommendations optimized for code review efficiency and deployment safety.
+
+## 🏗️ Repository Architecture
 
 | Repository | Purpose | Status |
 |------------|---------|--------|
 | [mcp_shared_lib](https://github.com/manavgup/mcp_shared_lib) | Shared models, tools, utilities | ✅ Active |
-| [mcp_local_repo_analyzer](https://github.com/manavgup/mcp_local_repo_analyzer) | Analyzes repository changes | 🏗️ In Progress |
-| [mcp_pr_recommender](https://github.com/manavgup/mcp_pr_recommender) | Generates PR recommendations | 🏗️ In Progress |
-| [mcp_auto_pr](https://github.com/manavgup/mcp_auto_pr) | Project coordination & docs | 📋 Planning |
+| [mcp_local_repo_analyzer](https://github.com/manavgup/mcp_local_repo_analyzer) | Analyzes repository changes | ✅ Active |
+| [mcp_pr_recommender](https://github.com/manavgup/mcp_pr_recommender) | Generates PR recommendations | ✅ Active |
+| [mcp_auto_pr](https://github.com/manavgup/mcp_auto_pr) | Project coordination & Docker orchestration | ✅ Active |
+| [mcp-gateway-demo](https://github.com/manavgup/mcp-gateway-demo) | Demo scenarios and examples | 🚀 New |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone and Setup the Workspace
+### Option 1: Docker Setup (Recommended)
+
+```bash
+# Clone and setup
+git clone https://github.com/manavgup/mcp_auto_pr.git
+cd mcp_auto_pr
+./setup.sh  # Sets up workspace with all repositories
+
+# Start with Docker
+chmod +x scripts/*.sh
+./scripts/docker-setup.sh
+```
+
+### Option 2: Traditional Setup
 
 ```bash
 git clone https://github.com/manavgup/mcp_auto_pr.git
@@ -23,29 +39,58 @@ cd mcp_auto_pr
 ./setup.sh
 ```
 
-- This will **automatically clone all required repositories** into the parent directory, set up Python environments, install dependencies, and generate a VSCode workspace file.
+---
 
-### 2. Open in VSCode
+## 🐳 Docker Deployment
 
+### Quick Start
 ```bash
-code ../mcp_workspace.code-workspace
+# One-command setup
+./scripts/docker-setup.sh
+
+# Test the deployment
+./scripts/test-servers.sh
+```
+
+### Services
+- **Local Repo Analyzer**: `http://localhost:9070`
+- **PR Recommender**: `http://localhost:9071`
+- **Health Checks**: `/health` endpoint on each service
+
+### Docker Commands
+```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild after changes
+docker-compose build && docker-compose up -d
 ```
 
 ---
 
 ## 🛠️ Workspace Management
 
-You can also use the Makefile for common tasks:
-
+### Makefile Commands
 ```bash
-make setup-auto      # Auto-clone all repos and setup
-make test-setup      # Test if workspace is properly setup
-make setup-workspace # Setup dependencies for existing repos
-make install-all     # Install all dependencies
-make test-all        # Run all tests
-make format-all      # Format all code
-make serve-analyzer  # Start analyzer service
+make setup-auto        # Auto-clone all repos and setup
+make test-setup         # Test if workspace is properly setup
+make setup-workspace    # Setup dependencies for existing repos
+make install-all        # Install all dependencies
+make test-all          # Run all tests
+make format-all        # Format all code
+make serve-analyzer    # Start analyzer service
 make serve-recommender # Start recommender service
+```
+
+### VSCode Integration
+```bash
+code ../mcp_workspace.code-workspace
 ```
 
 ---
@@ -54,65 +99,149 @@ make serve-recommender # Start recommender service
 
 ```
 mcp_workspace/
-├── mcp_auto_pr/           # Main coordination repo (this one)
-│   ├── scripts/           # Setup and utility scripts
-│   ├── docs/              # Documentation
-│   ├── workspace/         # VSCode workspace templates
-│   └── Makefile           # Build and management commands
-├── mcp_shared_lib/        # Shared utilities and models
-├── mcp_local_repo_analyzer/ # Repository change analysis
-├── mcp_pr_recommender/    # PR recommendation engine
+├── mcp_auto_pr/                    # Main coordination repo
+│   ├── docker-compose.yml         # Docker orchestration
+│   ├── scripts/                   # Setup and utility scripts
+│   │   ├── docker-setup.sh       # Docker deployment script
+│   │   ├── test-servers.sh       # Server testing script
+│   │   └── health-check.sh       # Health monitoring
+│   ├── docker/                   # Docker configurations
+│   │   ├── analyzer/Dockerfile   # Repo analyzer container
+│   │   ├── recommender/Dockerfile # PR recommender container
+│   │   └── docs/                 # Integration guides
+│   ├── docs/                     # Documentation
+│   └── Makefile                  # Build commands
+├── mcp_shared_lib/               # Shared utilities and models
+├── mcp_local_repo_analyzer/      # Repository change analysis
+├── mcp_pr_recommender/           # PR recommendation engine
 └── mcp_workspace.code-workspace  # VSCode workspace file
 ```
 
 ---
 
-## 📚 Documentation
+## 🔌 Integration Options
 
-- [Setup Guide](docs/setup-guide.md) — **Detailed setup, troubleshooting, and advanced configuration**
-- [Architecture Overview](docs/architecture.md)
-- [API Integration](docs/api-integration.md)
-- [Project Planning](planning/)
+### MCP Gateway Integration
+```bash
+# Register with MCP Gateway
+curl -X POST http://localhost:8000/gateways \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR-JWT-TOKEN" \
+  -d '{"name":"repo-analyzer","url":"http://localhost:9070/mcp"}'
+
+curl -X POST http://localhost:8000/gateways \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR-JWT-TOKEN" \
+  -d '{"name":"pr-recommender","url":"http://localhost:9071/mcp"}'
+```
+
+### Claude Desktop Integration
+Add to your Claude Desktop config:
+```json
+{
+  "mcpServers": {
+    "mcp-gateway": {
+      "command": "docker",
+      "args": ["exec", "-i", "mcp-gateway", "mcp-client"],
+      "env": {
+        "MCP_GATEWAY_URL": "http://localhost:8000"
+      }
+    }
+  }
+}
+```
 
 ---
 
-## 🧩 Scripts Overview
+## 🎯 Available Tools
 
-- `setup.sh` — Top-level entry point for workspace setup (run this after cloning)
-- `scripts/setup-workspace.sh` — Main script for cloning, updating, and configuring all repos
-- `scripts/config.sh` — Central configuration for repo URLs, branches, and workspace settings
-- `scripts/test-setup.sh` — Test script to verify workspace health
-- `scripts/post-clone.sh` — Alternative post-clone setup script
+### Local Repository Analyzer
+- `analyze_working_directory` - Analyze uncommitted changes
+- `analyze_staged_changes` - Analyze staged changes
+- `get_outstanding_summary` - Comprehensive change summary
+- `compare_with_remote` - Compare with remote branch
+
+### PR Recommender
+- `generate_pr_recommendations` - Generate smart PR groupings
+- `analyze_pr_feasibility` - Analyze PR feasibility and risks
+- `get_strategy_options` - Available grouping strategies
+- `validate_pr_recommendations` - Validate recommendations
+
+---
+
+## 🧪 Demo Scenarios
+
+Check out the [MCP Gateway Demo](https://github.com/manavgup/mcp-gateway-demo) repository for:
+
+1. **Messy Repo Rescue** - Transform chaotic changes into clean PRs
+2. **Smart Memory Assistant** - Learn from development patterns
+3. **GitHub Automation Hub** - Automate workflow orchestration
+4. **Team Coordination Engine** - Multi-developer coordination
+
+---
+
+## 📚 Documentation
+
+- [Docker Integration Guide](docker/docs/claude-integration.md)
+- [VSCode Setup](docker/docs/vscode-integration.md)
+- [MCP Gateway Integration](docker/docs/gateway-integration.md)
+- [Setup Guide](docs/setup-guide.md)
+- [Architecture Overview](docs/architecture.md)
+- [API Integration](docs/api-integration.md)
 
 ---
 
 ## 🐞 Troubleshooting
 
+### Docker Issues
+```bash
+# Check container status
+docker-compose ps
+
+# View container logs
+docker-compose logs mcp-repo-analyzer
+docker-compose logs mcp-pr-recommender
+
+# Restart services
+docker-compose restart
+```
+
+### Common Issues
 - **Permission denied:**
   ```bash
   chmod +x setup.sh scripts/*.sh
   ```
-- **Git not found:** Install from https://git-scm.com/
-- **Poetry not found:**
-  ```bash
-  curl -sSL https://install.python-poetry.org | python3 -
-  ```
-- **Repo already exists:** The setup script will pull latest changes automatically.
-- **Workspace file missing:** Run `./setup.sh` or `make setup-auto` again.
+- **Port conflicts:** Stop conflicting services with `pm2 delete all`
+- **Missing dependencies:** Run `./setup.sh` to reinstall
+- **Docker not found:** Install Docker Desktop
 - **Test your setup:**
   ```bash
-  make test-setup
+  ./scripts/test-servers.sh
   ```
+
+---
+
+## 🌟 Key Features
+
+- **🚀 One-Command Deployment** - Docker-first architecture
+- **🧠 Intelligent Analysis** - AI-powered change detection
+- **📦 Atomic PRs** - Logical, reviewable groupings
+- **🔄 Multiple Transport** - stdio, HTTP, streamable-http
+- **🎯 Gateway Ready** - Seamless MCP Gateway integration
+- **📊 Health Monitoring** - Built-in health checks
+- **🔧 Developer Friendly** - Easy local development
 
 ---
 
 ## 🤝 Contributing
 
-See [Contributing Guidelines](CONTRIBUTING.md)
+1. Fork the repository
+2. Create a feature branch
+3. Test with Docker: `./scripts/test-servers.sh`
+4. Submit a pull request
 
 ---
 
 ## 📄 License
 
-[Link to License]
-
+[MIT License](LICENSE)

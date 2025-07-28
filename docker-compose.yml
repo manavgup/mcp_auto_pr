@@ -1,0 +1,51 @@
+services:
+  # Local Repository Analyzer
+  mcp-repo-analyzer:
+    build:
+      context: ..  # Build from workspace root to include shared lib
+      dockerfile: mcp_auto_pr/docker/analyzer/Dockerfile
+    ports:
+      - "9070:9070"
+    environment:
+      - MCP_TRANSPORT=streamable-http
+      - MCP_PORT=9070
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./logs:/app/logs
+      # Optional: Mount a directory for analysis (uncomment and set path)
+      # - ${WORKSPACE_DIR:-/tmp}:/workspace:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9070/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # PR Recommender  
+  mcp-pr-recommender:
+    build:
+      context: ..  # Build from workspace root to include shared lib
+      dockerfile: mcp_auto_pr/docker/recommender/Dockerfile
+    ports:
+      - "9071:9071"
+    environment:
+      - MCP_TRANSPORT=streamable-http
+      - MCP_PORT=9071
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9071/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  logs:
+    driver: local
+
+networks:
+  default:
+    name: mcp-servers
