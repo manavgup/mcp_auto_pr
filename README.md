@@ -4,6 +4,82 @@
 
 Automatically analyzes outstanding code changes and generates atomic, logically-grouped pull request recommendations optimized for code review efficiency and deployment safety.
 
+![](docs/images/mcp_auto_pr_header.png)
+
+MCP Auto PR is comprised of two MCP agents:
+1. local_repo_analyzer - calls git client to analyze outstanding changes that have not made their way to source control.
+2. pr_recommender - generates PR recommendations for the outstanding changes.
+
+## MCP Auto PR In Action
+
+![Local Repo Analyzer](docs/images/local_repo_analyzer_tiny.gif)
+![PR Recommender](docs/images/mcp_pr_recommender_tiny.gif)
+
+## MCP Auto PR Use Cases
+```mermaid 
+  graph TD
+    subgraph "High-Level Workflow"
+        Dev[👨‍💻 Developer]
+        IDE[💻 IDE + AI Assistant]
+        System[🤖 MCP Auto PR System]
+        Results[📊 Intelligent PR Strategy]
+        
+        Dev --> IDE
+        IDE --> System
+        System --> Results
+        Results --> Dev
+    end
+```
+
+
+```mermaid 
+graph TB
+    subgraph "Step 1: Analysis Request"
+        Dev1[👨‍💻 Developer] 
+        Chat1["💬 'Analyze my repository changes'"]
+        Analyzer[🔍 MCP Repo Analyzer<br/>Port 9070]
+        Analysis["📊 Analysis Results<br/>• 12 files, 3 repos<br/>• Risk assessment<br/>• Change categorization"]
+    end
+    
+    subgraph "Step 2: Recommendation Request"  
+        Dev2[👨‍💻 Developer]
+        Chat2["💬 'Generate PR recommendations<br/>for these changes'"]
+        Recommender[🧠 MCP PR Recommender<br/>Port 9071]
+        PRs["🎯 PR Recommendations<br/>• 6 intelligent PRs<br/>• Dependency ordering<br/>• Review time estimates"]
+    end
+    
+    Dev1 --> Chat1
+    Chat1 --> Analyzer
+    Analyzer --> Analysis
+    Analysis --> Dev1
+    
+    Dev1 -.-> Dev2
+    Dev2 --> Chat2
+    Chat2 --> Recommender
+    Recommender --> PRs
+    PRs --> Dev2
+```
+## 🚀 Quick Start (30 seconds!)
+
+### One-Command Install (Recommended)
+```bash
+git clone https://github.com/manavgup/mcp_auto_pr.git
+cd mcp_auto_pr
+./install.sh
+```
+
+### Alternative Methods
+```bash
+# Docker setup
+./install.sh --docker
+
+# Poetry setup  
+./install.sh --poetry
+
+# Legacy setup
+./setup.sh && ./scripts/docker-setup.sh
+```
+
 ## 🏗️ Repository Architecture
 
 | Repository | Purpose | Status |
@@ -12,50 +88,12 @@ Automatically analyzes outstanding code changes and generates atomic, logically-
 | [mcp_local_repo_analyzer](https://github.com/manavgup/mcp_local_repo_analyzer) | Analyzes repository changes | ✅ Active |
 | [mcp_pr_recommender](https://github.com/manavgup/mcp_pr_recommender) | Generates PR recommendations | ✅ Active |
 | [mcp_auto_pr](https://github.com/manavgup/mcp_auto_pr) | Project coordination & Docker orchestration | ✅ Active |
-| [mcp-gateway-demo](https://github.com/manavgup/mcp-gateway-demo) | Demo scenarios and examples | 🚀 New |
-
----
-
-## 🚀 Quick Start
-
-### Option 1: Docker Setup (Recommended)
-
-```bash
-# Clone and setup
-git clone https://github.com/manavgup/mcp_auto_pr.git
-cd mcp_auto_pr
-./setup.sh  # Sets up workspace with all repositories
-
-# Start with Docker
-chmod +x scripts/*.sh
-./scripts/docker-setup.sh
-```
-
-### Option 2: Traditional Setup
-
-```bash
-git clone https://github.com/manavgup/mcp_auto_pr.git
-cd mcp_auto_pr
-./setup.sh
-```
-
----
 
 ## 🐳 Docker Deployment
 
-### Quick Start
-```bash
-# One-command setup
-./scripts/docker-setup.sh
-
-# Test the deployment
-./scripts/test-servers.sh
-```
-
 ### Services
-- **Local Repo Analyzer**: `http://localhost:9070`
-- **PR Recommender**: `http://localhost:9071`
-- **Health Checks**: `/health` endpoint on each service
+- **MCP Repo Analyzer**: `http://localhost:9070` - Change detection and analysis
+- **MCP PR Recommender**: `http://localhost:9071` - AI-powered PR strategy generation
 
 ### Docker Commands
 ```bash
@@ -65,50 +103,91 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Stop services
+# Stop services  
 docker-compose down
 
-# Rebuild after changes
-docker-compose build && docker-compose up -d
+# Health check
+curl http://localhost:9070/health
+curl http://localhost:9071/health
 ```
 
----
-
-## 🛠️ Workspace Management
-
-### Makefile Commands
+### Development Mode
 ```bash
-make setup-auto        # Auto-clone all repos and setup
-make test-setup         # Test if workspace is properly setup
-make setup-workspace    # Setup dependencies for existing repos
-make install-all        # Install all dependencies
-make test-all          # Run all tests
-make format-all        # Format all code
-make serve-analyzer    # Start analyzer service
-make serve-recommender # Start recommender service
+# Start with live code reloading
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-### VSCode Integration
-```bash
-code ../mcp_workspace.code-workspace
+## 🔌 IDE Integration
+
+### VS Code/Cursor Configuration
+Add to your MCP settings:
+```json
+{
+  "mcpServers": {
+    "repo-analyzer": {
+      "command": "docker",
+      "args": ["exec", "-i", "mcp-repo-analyzer", "python", "-m", "mcp_local_repo_analyzer.main"],
+      "transport": "stdio"
+    },
+    "pr-recommender": {
+      "command": "docker", 
+      "args": ["exec", "-i", "mcp-pr-recommender", "python", "-m", "mcp_pr_recommender.main"],
+      "transport": "stdio"
+    }
+  }
+}
 ```
 
----
+### Cline Integration
+```json
+{
+  "mcpServers": {
+    "repo-analyzer": {
+      "timeout": 120,
+      "type": "stdio",
+      "command": "poetry",
+      "args": ["run", "python", "-m", "mcp_local_repo_analyzer.main"],
+      "cwd": "./mcp_local_repo_analyzer"
+    },
+    "pr-recommender": {
+      "timeout": 120,
+      "type": "stdio", 
+      "command": "poetry",
+      "args": ["run", "python", "-m", "mcp_pr_recommender.main"],
+      "cwd": "./mcp_pr_recommender",
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+## 🎯 Available Tools
+
+### MCP Repo Analyzer
+- `analyze_working_directory` - Analyze uncommitted changes with risk assessment
+- `analyze_staged_changes` - Analyze staged changes ready for commit
+- `get_outstanding_summary` - Comprehensive change summary across repositories
+- `compare_with_remote` - Compare local branch with remote branch
+- `analyze_repository_health` - Overall repository health metrics
+
+### MCP PR Recommender  
+- `generate_pr_recommendations` - Generate intelligent PR groupings with dependency ordering
+- `analyze_pr_feasibility` - Analyze PR feasibility and potential conflicts
+- `get_strategy_options` - Available grouping strategies (semantic, size-based, etc.)
+- `validate_pr_recommendations` - Validate and refine recommendations
 
 ## 📁 Workspace Structure
 
 ```
 mcp_workspace/
 ├── mcp_auto_pr/                    # Main coordination repo
-│   ├── docker-compose.yml         # Docker orchestration
+│   ├── docker-compose.yml         # Docker orchestration  
 │   ├── scripts/                   # Setup and utility scripts
-│   │   ├── docker-setup.sh       # Docker deployment script
-│   │   ├── test-servers.sh       # Server testing script
+│   │   ├── docker-setup.sh       # Docker deployment
+│   │   ├── test-servers.sh       # Server testing
 │   │   └── health-check.sh       # Health monitoring
-│   ├── docker/                   # Docker configurations
-│   │   ├── analyzer/Dockerfile   # Repo analyzer container
-│   │   ├── recommender/Dockerfile # PR recommender container
-│   │   └── docs/                 # Integration guides
 │   ├── docs/                     # Documentation
 │   └── Makefile                  # Build commands
 ├── mcp_shared_lib/               # Shared utilities and models
@@ -117,79 +196,68 @@ mcp_workspace/
 └── mcp_workspace.code-workspace  # VSCode workspace file
 ```
 
----
+## 🛠️ Development
 
-## 🔌 Integration Options
-
-### MCP Gateway Integration
+### Environment Setup
 ```bash
-# Register with MCP Gateway
-curl -X POST http://localhost:8000/gateways \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR-JWT-TOKEN" \
-  -d '{"name":"repo-analyzer","url":"http://localhost:9070/mcp"}'
+# Python ≥ 3.10
+# Poetry for dependency management
+# Docker & Docker Compose (optional)
 
-curl -X POST http://localhost:8000/gateways \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR-JWT-TOKEN" \
-  -d '{"name":"pr-recommender","url":"http://localhost:9071/mcp"}'
+make setup-auto        # Auto-clone all repos and setup
+make install-all        # Install all dependencies
+make test-all          # Run all tests
+make serve-analyzer    # Start analyzer service
+make serve-recommender # Start recommender service
 ```
 
-### Claude Desktop Integration
-Add to your Claude Desktop config:
-```json
-{
-  "mcpServers": {
-    "mcp-gateway": {
-      "command": "docker",
-      "args": ["exec", "-i", "mcp-gateway", "mcp-client"],
-      "env": {
-        "MCP_GATEWAY_URL": "http://localhost:8000"
-      }
-    }
-  }
-}
+### Testing
+```bash
+# Test Docker setup
+./scripts/test-servers.sh
+
+# Test individual components
+make test-setup
+poetry run python -m pytest
 ```
 
----
+## ⚙️ Configuration
 
-## 🎯 Available Tools
+### Environment Variables
 
-### Local Repository Analyzer
-- `analyze_working_directory` - Analyze uncommitted changes
-- `analyze_staged_changes` - Analyze staged changes
-- `get_outstanding_summary` - Comprehensive change summary
-- `compare_with_remote` - Compare with remote branch
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `OPENAI_API_KEY` | OpenAI API key for AI analysis | ✅ | - |
+| `GITHUB_TOKEN` | GitHub token for PR creation | ❌ | - |
+| `LOG_LEVEL` | Logging level | ❌ | `INFO` |
+| `WORK_DIR` | Default working directory | ❌ | `.` |
 
-### PR Recommender
-- `generate_pr_recommendations` - Generate smart PR groupings
-- `analyze_pr_feasibility` - Analyze PR feasibility and risks
-- `get_strategy_options` - Available grouping strategies
-- `validate_pr_recommendations` - Validate recommendations
+### .env Example
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+GITHUB_TOKEN=your_github_token_here
+LOG_LEVEL=INFO
+```
 
----
+## 🔍 How It Works
 
-## 🧪 Demo Scenarios
+1. **Developer initiates analysis** via IDE chat: *"Analyze my repository changes"*
+2. **MCP Repo Analyzer** scans for uncommitted changes, categorizes files, assesses risks
+3. **Analysis results** include file counts, change types, conflict detection, line statistics
+4. **MCP PR Recommender** processes analysis data using AI to generate semantic groupings
+5. **PR recommendations** delivered with dependency ordering, review time estimates, risk levels
+6. **Developer receives actionable insights** for creating well-structured pull requests
 
-Check out the [MCP Gateway Demo](https://github.com/manavgup/mcp-gateway-demo) repository for:
+## 🚀 Features
 
-1. **Messy Repo Rescue** - Transform chaotic changes into clean PRs
-2. **Smart Memory Assistant** - Learn from development patterns
-3. **GitHub Automation Hub** - Automate workflow orchestration
-4. **Team Coordination Engine** - Multi-developer coordination
-
----
-
-## 📚 Documentation
-
-- [Docker Integration Guide](docker/docs/claude-integration.md)
-- [VSCode Setup](docker/docs/vscode-integration.md)
-- [MCP Gateway Integration](docker/docs/gateway-integration.md)
-- [Setup Guide](docs/setup-guide.md)
-- [Architecture Overview](docs/architecture.md)
-- [API Integration](docs/api-integration.md)
-
----
+- **🔍 Intelligent Analysis** - AI-powered change detection and categorization
+- **🎯 Semantic Grouping** - Logical PR boundaries based on code relationships  
+- **⚠️ Risk Assessment** - Identifies potential conflicts and high-risk changes
+- **📊 Multi-Repository** - Coordinate changes across multiple repositories
+- **🐳 Docker Ready** - One-command deployment with health monitoring
+- **🔌 IDE Native** - Seamless integration with VS Code, Cursor, and other MCP-compatible IDEs
+- **📈 Dependency Aware** - Understands which PRs should be merged first
+- **⏱️ Review Optimization** - Estimates review times and suggests optimal PR sizes
 
 ## 🐞 Troubleshooting
 
@@ -198,7 +266,7 @@ Check out the [MCP Gateway Demo](https://github.com/manavgup/mcp-gateway-demo) r
 # Check container status
 docker-compose ps
 
-# View container logs
+# View logs
 docker-compose logs mcp-repo-analyzer
 docker-compose logs mcp-pr-recommender
 
@@ -207,41 +275,51 @@ docker-compose restart
 ```
 
 ### Common Issues
-- **Permission denied:**
-  ```bash
-  chmod +x setup.sh scripts/*.sh
-  ```
-- **Port conflicts:** Stop conflicting services with `pm2 delete all`
-- **Missing dependencies:** Run `./setup.sh` to reinstall
-- **Docker not found:** Install Docker Desktop
-- **Test your setup:**
-  ```bash
-  ./scripts/test-servers.sh
-  ```
 
----
+| Issue | Solution |
+|-------|----------|
+| Permission denied | `chmod +x setup.sh scripts/*.sh` |
+| Port conflicts | `pm2 delete all` to stop conflicting services |
+| Missing dependencies | Run `./setup.sh` to reinstall |
+| Docker not found | Install Docker Desktop |
+| Module not found | Ensure Poetry environment is activated |
 
-## 🌟 Key Features
+### Health Checks
+```bash
+# Test server health
+curl http://localhost:9070/health
+curl http://localhost:9071/health
 
-- **🚀 One-Command Deployment** - Docker-first architecture
-- **🧠 Intelligent Analysis** - AI-powered change detection
-- **📦 Atomic PRs** - Logical, reviewable groupings
-- **🔄 Multiple Transport** - stdio, HTTP, streamable-http
-- **🎯 Gateway Ready** - Seamless MCP Gateway integration
-- **📊 Health Monitoring** - Built-in health checks
-- **🔧 Developer Friendly** - Easy local development
+# Run comprehensive tests
+./scripts/test-servers.sh
+```
 
----
+## 📚 Documentation
+
+- [Setup Guide](docs/setup-guide.md) - Detailed installation and configuration
+- [Architecture Overview](docs/architecture.md) - System design and components
+- [API Integration](docs/api-integration.md) - MCP protocol implementation
+- [Docker Integration](docker/docs/) - Container deployment guides
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Test with Docker: `./scripts/test-servers.sh`
-4. Submit a pull request
-
----
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Test your changes (`./scripts/test-servers.sh`)
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## 📄 License
 
-[MIT License](LICENSE)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**[⭐ Star this repo](https://github.com/manavgup/mcp_auto_pr)** • **[🐛 Report Bug](https://github.com/manavgup/mcp_auto_pr/issues)** • **[💡 Request Feature](https://github.com/manavgup/mcp_auto_pr/issues)**
+
+Built with ❤️ using the [Model Context Protocol](https://modelcontextprotocol.io/)
+
+</div>
