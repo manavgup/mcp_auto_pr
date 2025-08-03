@@ -207,8 +207,65 @@ mcp_workspace/
 make setup-auto        # Auto-clone all repos and setup
 make install-all        # Install all dependencies
 make test-all          # Run all tests
-make serve-analyzer    # Start analyzer service
-make serve-recommender # Start recommender service
+make serve-analyzer    # Start analyzer service (port 8001)
+make serve-recommender # Start recommender service (port 8002)
+```
+
+### Available Make Commands
+```bash
+# Setup & Installation
+make setup-workspace   # Initialize entire workspace
+make setup-auto        # Auto-clone all repos and setup
+make test-setup        # Test if workspace is properly setup
+make install-all       # Install all repo dependencies
+make update-all        # Update all repo dependencies
+
+# Testing
+make test-all          # Run tests across all repos
+make test-shared       # Test shared library
+make test-analyzer     # Test local repo analyzer
+make test-recommender  # Test PR recommender
+make test-integration  # Run workspace integration tests
+
+# Code Quality
+make lint-all          # Run linting across all repos
+make format-all        # Format code across all repos
+
+# Services
+make serve-analyzer    # Start analyzer service (port 8001)
+make serve-recommender # Start recommender service (port 8002)
+make serve-all         # Start all MCP servers
+make check-servers     # Check if servers can be started
+make stop-servers      # Stop all MCP servers
+
+# Cleanup
+make clean-all         # Clean all repos
+make reset-workspace   # Reset entire workspace
+
+# Build & Package
+make build-all         # Build all packages
+make package-all       # Package all components
+```
+
+### Development Scripts
+```bash
+# Available scripts in scripts/ directory
+./scripts/setup-workspace.sh    # Initialize workspace
+./scripts/test-setup.sh         # Test workspace setup
+./scripts/test-servers.sh       # Test server functionality
+./scripts/test-integration.sh   # Integration tests
+./scripts/test-enhanced-mcp.sh  # Enhanced MCP testing
+./scripts/health-check.sh       # Health monitoring
+./scripts/docker-setup.sh       # Docker environment setup
+./scripts/setup-dev-env.sh      # Development environment
+./scripts/config.sh             # Configuration management
+./scripts/post-clone.sh         # Post-clone setup
+
+# Root-level setup scripts
+./install.sh                    # One-command install
+./setup.sh                      # Legacy setup
+./mcp_bridge_setup.sh          # MCP bridge configuration
+./stdio_gateway_setup.sh       # STDIO gateway setup
 ```
 
 ### Testing
@@ -219,6 +276,12 @@ make serve-recommender # Start recommender service
 # Test individual components
 make test-setup
 poetry run python -m pytest
+
+# Enhanced MCP testing
+./scripts/test-enhanced-mcp.sh
+
+# Integration testing
+./scripts/test-integration.sh
 ```
 
 ## ⚙️ Configuration
@@ -231,12 +294,74 @@ poetry run python -m pytest
 | `GITHUB_TOKEN` | GitHub token for PR creation | ❌ | - |
 | `LOG_LEVEL` | Logging level | ❌ | `INFO` |
 | `WORK_DIR` | Default working directory | ❌ | `.` |
+| `MCP_TRANSPORT` | Transport protocol (stdio/http/websocket/sse) | ❌ | `stdio` |
+| `MCP_HTTP_HOST` | HTTP server host | ❌ | `0.0.0.0` |
+| `MCP_HTTP_PORT` | HTTP server port | ❌ | `9070`/`9071` |
+| `MCP_WS_PORT` | WebSocket port | ❌ | `9041` |
+| `MCP_LOG_TRANSPORT_DETAILS` | Enable transport logging | ❌ | `false` |
 
 ### .env Example
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
 GITHUB_TOKEN=your_github_token_here
 LOG_LEVEL=INFO
+
+# MCP Transport Configuration (optional)
+MCP_TRANSPORT=http
+MCP_HTTP_HOST=0.0.0.0
+MCP_HTTP_PORT=9070
+MCP_LOG_TRANSPORT_DETAILS=true
+```
+
+### Transport Configuration
+
+The MCP servers support multiple transport protocols:
+
+#### STDIO Transport (Default)
+```bash
+# Direct MCP communication
+cd ../mcp_local_repo_analyzer
+poetry run python -m mcp_local_repo_analyzer.main
+
+cd ../mcp_pr_recommender  
+poetry run python -m mcp_pr_recommender.main
+```
+
+#### HTTP Transport
+```bash
+# HTTP API endpoints
+export MCP_TRANSPORT=http
+export MCP_HTTP_PORT=9070
+cd ../mcp_local_repo_analyzer
+poetry run python -m mcp_local_repo_analyzer.main --transport http --port 9070
+
+export MCP_HTTP_PORT=9071
+cd ../mcp_pr_recommender
+poetry run python -m mcp_pr_recommender.main --transport http --port 9071
+```
+
+#### WebSocket Transport
+```bash
+# Real-time bidirectional communication
+export MCP_TRANSPORT=websocket
+export MCP_WS_PORT=9041
+cd ../mcp_local_repo_analyzer
+poetry run python -m mcp_local_repo_analyzer.main --transport websocket --port 9041
+
+export MCP_WS_PORT=9042
+cd ../mcp_pr_recommender
+poetry run python -m mcp_pr_recommender.main --transport websocket --port 9042
+```
+
+#### Server-Sent Events (SSE)
+```bash
+# Streaming responses
+export MCP_TRANSPORT=sse
+cd ../mcp_local_repo_analyzer
+poetry run python -m mcp_local_repo_analyzer.main --transport sse
+
+cd ../mcp_pr_recommender
+poetry run python -m mcp_pr_recommender.main --transport sse
 ```
 
 ## 🔍 How It Works
@@ -258,6 +383,71 @@ LOG_LEVEL=INFO
 - **🔌 IDE Native** - Seamless integration with VS Code, Cursor, and other MCP-compatible IDEs
 - **📈 Dependency Aware** - Understands which PRs should be merged first
 - **⏱️ Review Optimization** - Estimates review times and suggests optimal PR sizes
+- **🔄 Multi-Transport** - Supports STDIO, HTTP, WebSocket, and SSE protocols
+- **🏗️ Workspace Coordination** - Unified build system across all components
+
+## 🏭 Workspace Management
+
+### Multi-Root Workspace Structure
+```
+mcp_pr_workspace/
+├── mcp_auto_pr/                 # 🚀 Orchestration & deployment
+├── mcp_shared_lib/              # 📚 Foundation library  
+├── mcp_local_repo_analyzer/     # 🔍 Git analysis engine
+├── mcp_pr_recommender/          # 🧠 AI recommendations
+├── Makefile                     # Root workspace commands
+└── pyproject.toml               # Workspace configuration
+```
+
+### Workspace Commands (from root)
+```bash
+# From workspace root directory
+make test-all           # Test all 4 repositories
+make lint               # Lint all repositories  
+make format             # Format all repositories
+make install-all        # Install all dependencies
+make dev-setup          # Complete development setup
+
+# Individual repository testing
+make test-shared        # Test mcp_shared_lib
+make test-analyzer      # Test mcp_local_repo_analyzer
+make test-recommender   # Test mcp_pr_recommender
+```
+
+### Advanced Usage Patterns
+
+#### Multi-Repository Analysis
+```bash
+# Analyze changes across multiple repositories
+curl -X POST http://localhost:9070/analyze_working_directory \
+  -H "Content-Type: application/json" \
+  -d '{"repositories": ["./repo1", "./repo2", "./repo3"]}'
+
+# Generate coordinated PR recommendations
+curl -X POST http://localhost:9071/generate_pr_recommendations \
+  -H "Content-Type: application/json" \
+  -d '{"analysis_results": "..."}' 
+```
+
+#### Custom Transport Configurations
+```yaml
+# config/custom-transport.yaml
+transport:
+  type: http
+  http:
+    host: 0.0.0.0
+    port: 9070
+    cors_origins: ["https://myapp.com"]
+  logging:
+    level: DEBUG
+    transport_details: true
+```
+
+```bash
+# Use custom configuration
+cd ../mcp_local_repo_analyzer
+poetry run python -m mcp_local_repo_analyzer.main --config ../mcp_auto_pr/config/custom-transport.yaml
+```
 
 ## 🐞 Troubleshooting
 
