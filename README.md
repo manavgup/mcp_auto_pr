@@ -61,7 +61,27 @@ graph TB
 ```
 ## 🚀 Quick Start (30 seconds!)
 
-### One-Command Install (Recommended)
+### 📦 PyPI Installation (Simplest)
+Install the MCP servers directly from PyPI:
+```bash
+# Install both MCP servers
+pip install mcp-local-repo-analyzer mcp-pr-recommender
+
+# Or with uv (faster)
+uv add mcp-local-repo-analyzer mcp-pr-recommender
+
+# Test the installation
+local-git-analyzer --help
+pr-recommender --help
+
+# Set your OpenAI API key for PR recommender
+export OPENAI_API_KEY="your-api-key-here"
+
+# Test the installation
+python test_pypi_packages.py
+```
+
+### 🐳 One-Command Install (Full Development Setup)
 ```bash
 git clone https://github.com/manavgup/mcp_auto_pr.git
 cd mcp_auto_pr
@@ -120,7 +140,28 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ## 🔌 IDE Integration
 
 ### VS Code/Cursor Configuration
-Add to your MCP settings:
+
+#### Option 1: PyPI Installation (Recommended)
+After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
+```json
+{
+  "mcpServers": {
+    "repo-analyzer": {
+      "command": "local-git-analyzer",
+      "transport": "stdio"
+    },
+    "pr-recommender": {
+      "command": "pr-recommender",
+      "transport": "stdio",
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+#### Option 2: Docker Configuration
 ```json
 {
   "mcpServers": {
@@ -139,6 +180,29 @@ Add to your MCP settings:
 ```
 
 ### Cline Integration
+
+#### Option 1: PyPI Installation (Recommended)
+```json
+{
+  "mcpServers": {
+    "repo-analyzer": {
+      "timeout": 120,
+      "type": "stdio",
+      "command": "local-git-analyzer"
+    },
+    "pr-recommender": {
+      "timeout": 120,
+      "type": "stdio", 
+      "command": "pr-recommender",
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+#### Option 2: Development Setup
 ```json
 {
   "mcpServers": {
