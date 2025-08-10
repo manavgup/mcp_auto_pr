@@ -98,15 +98,15 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: docker/setup-buildx-action@v3
-      
+
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -117,7 +117,7 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-      
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -151,11 +151,11 @@ jobs:
         with:
           python-version: '3.11'
       - uses: snok/install-poetry@v1
-      
+
       - name: Build packages
         run: |
           poetry build
-          
+
       - name: Publish to PyPI
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -266,17 +266,17 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    
+
   - package-ecosystem: "docker"
     directory: "/docker/analyzer"
     schedule:
       interval: "weekly"
-      
+
   - package-ecosystem: "docker"
     directory: "/docker/recommender"
     schedule:
       interval: "weekly"
-      
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

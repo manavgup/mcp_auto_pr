@@ -35,7 +35,7 @@ else
     exit 1
 fi
 
-# For stdio servers, we need to register them as "virtual servers" 
+# For stdio servers, we need to register them as "virtual servers"
 # that the gateway can manage through the wrapper
 
 echo "📊 Registering Local Repository Analyzer as virtual server..."
@@ -64,7 +64,7 @@ echo "🎯 Registering PR Recommender as virtual server..."
 curl -X POST -H "Authorization: Bearer $MCPGATEWAY_BEARER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "pr_recommender", 
+    "name": "pr_recommender",
     "description": "Pull request recommendation and strategy engine",
     "command": "poetry",
     "args": ["run", "pr-recommender"],
@@ -76,7 +76,7 @@ curl -X POST -H "Authorization: Bearer $MCPGATEWAY_BEARER_TOKEN" \
     },
     "transport": "stdio",
     "metadata": {
-      "version": "0.1.0", 
+      "version": "0.1.0",
       "capabilities": ["recommend_pr_strategy", "analyze_changes", "group_commits"],
       "category": "development"
     }

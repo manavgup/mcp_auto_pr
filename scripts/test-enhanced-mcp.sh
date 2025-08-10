@@ -13,12 +13,12 @@ test_mcp_server() {
     local tool_name=$2
     local arguments=$3
     local description=$4
-    
+
     echo "🔗 Testing: $description"
     echo "📡 Server: localhost:$port"
     echo "🔧 Tool: $tool_name"
     echo ""
-    
+
     # 1. Initialize session
     echo "Step 1: Initializing session..."
     curl -s -D /tmp/mcp_headers_${port}.txt -X POST \
@@ -35,11 +35,11 @@ test_mcp_server() {
         }
       }' \
       "http://localhost:$port/mcp/" > /dev/null
-    
+
     # 2. Extract session ID
     local session_id=$(grep -i "mcp-session-id" /tmp/mcp_headers_${port}.txt | cut -d' ' -f2 | tr -d '\r\n')
     echo "Session ID: $session_id"
-    
+
     # 3. CRITICAL: Send initialized notification
     echo "Step 2: Sending initialized notification..."
     curl -s -X POST \
@@ -51,7 +51,7 @@ test_mcp_server() {
         "method": "notifications/initialized"
       }' \
       "http://localhost:$port/mcp/" > /dev/null
-    
+
     # 4. Call the tool
     echo "Step 3: Calling tool..."
     local response=$(curl -s -X POST \
@@ -68,11 +68,11 @@ test_mcp_server() {
         }
       }' \
       "http://localhost:$port/mcp/")
-    
+
     # 5. Extract and display result
     echo "✅ Result:"
     echo "$response" | grep "^data: " | tail -1 | sed 's/^data: //' | jq -r '.result.structuredContent' | jq .
-    
+
     echo ""
     echo "----------------------------------------"
     echo ""
@@ -82,7 +82,7 @@ test_mcp_server() {
 list_tools() {
     local port=$1
     echo "📋 Listing tools on port $port..."
-    
+
     # Initialize session
     curl -s -D /tmp/mcp_headers_${port}.txt -X POST \
       -H "Content-Type: application/json" \
@@ -98,9 +98,9 @@ list_tools() {
         }
       }' \
       "http://localhost:$port/mcp/" > /dev/null
-    
+
     local session_id=$(grep -i "mcp-session-id" /tmp/mcp_headers_${port}.txt | cut -d' ' -f2 | tr -d '\r\n')
-    
+
     # Send initialized notification
     curl -s -X POST \
       -H "Content-Type: application/json" \
@@ -111,7 +111,7 @@ list_tools() {
         "method": "notifications/initialized"
       }' \
       "http://localhost:$port/mcp/" > /dev/null
-    
+
     # List tools
     curl -s -X POST \
       -H "Content-Type: application/json" \
@@ -124,7 +124,7 @@ list_tools() {
         "params": {}
       }' \
       "http://localhost:$port/mcp/" | grep "^data: " | tail -1 | sed 's/^data: //' | jq -r '.result.tools[].name'
-    
+
     echo ""
 }
 

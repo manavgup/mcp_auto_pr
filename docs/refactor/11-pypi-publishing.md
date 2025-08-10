@@ -85,7 +85,7 @@ def build_package(name, includes):
     pass
 
 # Build each package
-build_package("mcp-local-repo-analyzer", 
+build_package("mcp-local-repo-analyzer",
               ["mcp_local_repo_analyzer", "mcp_shared_lib"])
 build_package("mcp-pr-recommender",
               ["mcp_pr_recommender", "mcp_shared_lib"])
@@ -124,12 +124,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
       - uses: snok/install-poetry@v1
-      
+
       - name: Build analyzer package
         run: |
           cp pyproject-analyzer.toml pyproject.toml
           poetry build
-          
+
       - name: Publish analyzer
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -200,7 +200,7 @@ def update_all_versions(new_version):
         "pyproject-analyzer.toml",
         "pyproject-recommender.toml"
     ]
-    
+
     for config_file in configs:
         with open(config_file, 'r') as f:
             data = toml.load(f)

@@ -61,4 +61,4 @@ Use this checklist to track the progress of standardizing logging across all MCP
 **How to use:**
 - Check off each item as you complete it.
 - Add notes or links to PRs/issues as needed.
-- Update this file regularly to track progress. 
+- Update this file regularly to track progress.

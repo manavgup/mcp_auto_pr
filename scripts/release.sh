@@ -5,7 +5,7 @@
 #
 # This script coordinates releases across all MCP workspace repositories:
 # - mcp_shared_lib (foundation)
-# - mcp_local_repo_analyzer 
+# - mcp_local_repo_analyzer
 # - mcp_pr_recommender
 #
 # Usage:
@@ -45,7 +45,7 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     case $level in
         "INFO")  echo -e "${BLUE}[INFO]${NC}  [$timestamp] $message" ;;
         "WARN")  echo -e "${YELLOW}[WARN]${NC}  [$timestamp] $message" ;;
@@ -64,7 +64,7 @@ USAGE:
 
 VERSION_TYPE:
     patch       Patch release (x.y.Z) - bug fixes
-    minor       Minor release (x.Y.z) - new features  
+    minor       Minor release (x.Y.z) - new features
     major       Major release (X.y.z) - breaking changes
     prerelease  Prerelease (x.y.z-alpha.N) - testing
 
@@ -77,7 +77,7 @@ EXAMPLES:
     $0 patch                    # Release patch versions
     $0 minor --dry-run          # Preview minor version bumps
     $0 major --verbose          # Release major versions with detailed output
-    
+
 REPOSITORY ORDER:
     1. mcp_shared_lib (foundation dependency)
     2. mcp_local_repo_analyzer & mcp_pr_recommender (parallel)
@@ -118,17 +118,17 @@ parse_args() {
 validate_repository() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     if [[ ! -d "$repo_dir" ]]; then
         log "ERROR" "Repository directory not found: $repo_dir"
         return 1
     fi
-    
+
     if [[ ! -d "$repo_dir/.git" ]]; then
         log "ERROR" "$repo_name is not a git repository: $repo_dir"
         return 1
     fi
-    
+
     log "INFO" "✓ $repo_name repository found at $repo_dir"
     return 0
 }
@@ -137,9 +137,9 @@ validate_repository() {
 check_working_directory() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     cd "$repo_dir"
-    
+
     if [[ -n $(git status --porcelain) ]]; then
         log "WARN" "$repo_name has uncommitted changes:"
         git status --short
@@ -153,7 +153,7 @@ check_working_directory() {
     else
         log "INFO" "✓ $repo_name working directory is clean"
     fi
-    
+
     return 0
 }
 
@@ -161,15 +161,15 @@ check_working_directory() {
 run_tests() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     log "INFO" "Running tests for $repo_name..."
     cd "$repo_dir"
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "[DRY RUN] Would run: make test"
         return 0
     fi
-    
+
     if make test; then
         log "SUCCESS" "✓ $repo_name tests passed"
         return 0
@@ -183,15 +183,15 @@ run_tests() {
 run_quality_checks() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     log "INFO" "Running quality checks for $repo_name..."
     cd "$repo_dir"
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "[DRY RUN] Would run: make quality-check"
         return 0
     fi
-    
+
     if make quality-check; then
         log "SUCCESS" "✓ $repo_name quality checks passed"
         return 0
@@ -204,7 +204,7 @@ run_quality_checks() {
 # Function to get current version
 get_current_version() {
     local repo_dir=$1
-    
+
     cd "$repo_dir"
     poetry version --short
 }
@@ -213,10 +213,10 @@ get_current_version() {
 preview_version() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     cd "$repo_dir"
     local current_version=$(get_current_version "$repo_dir")
-    
+
     if command -v poetry >/dev/null 2>&1; then
         local next_version=$(poetry run semantic-release version --print 2>/dev/null || echo "unknown")
         log "INFO" "$repo_name: $current_version → $next_version"
@@ -229,24 +229,24 @@ preview_version() {
 create_release() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     log "INFO" "Creating $VERSION_TYPE release for $repo_name..."
     cd "$repo_dir"
-    
+
     local current_version=$(get_current_version "$repo_dir")
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "[DRY RUN] Would create $VERSION_TYPE release for $repo_name"
         preview_version "$repo_dir" "$repo_name"
         return 0
     fi
-    
+
     # Create the release using semantic-release
     local cmd="poetry run semantic-release version --$VERSION_TYPE --no-push"
     if [[ "$VERBOSE" == "true" ]]; then
         cmd="$cmd --verbose"
     fi
-    
+
     if eval "$cmd"; then
         local new_version=$(get_current_version "$repo_dir")
         log "SUCCESS" "✓ $repo_name released: $current_version → $new_version"
@@ -261,15 +261,15 @@ create_release() {
 push_releases() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     log "INFO" "Pushing release for $repo_name..."
     cd "$repo_dir"
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "[DRY RUN] Would push tags and commits for $repo_name"
         return 0
     fi
-    
+
     if git push origin main --tags; then
         log "SUCCESS" "✓ $repo_name pushed successfully"
         return 0
@@ -283,17 +283,17 @@ push_releases() {
 create_github_release() {
     local repo_dir=$1
     local repo_name=$2
-    
+
     cd "$repo_dir"
     local version=$(get_current_version "$repo_dir")
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "[DRY RUN] Would create GitHub release v$version for $repo_name"
         return 0
     fi
-    
+
     log "INFO" "Creating GitHub release v$version for $repo_name..."
-    
+
     # Use semantic-release to create the GitHub release
     if poetry run semantic-release publish; then
         log "SUCCESS" "✓ GitHub release created for $repo_name v$version"
@@ -310,77 +310,77 @@ main() {
     log "INFO" "Version type: $VERSION_TYPE"
     log "INFO" "Dry run: $DRY_RUN"
     echo
-    
+
     # Parse command line arguments
     parse_args "$@"
-    
+
     # Validate all repositories exist
     log "INFO" "Validating repositories..."
     validate_repository "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
-    validate_repository "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1  
+    validate_repository "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     validate_repository "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
+
     # Check working directories are clean
     log "INFO" "Checking working directories..."
     check_working_directory "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
     check_working_directory "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     check_working_directory "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
+
     if [[ "$DRY_RUN" == "true" ]]; then
         log "INFO" "DRY RUN MODE - Previewing release changes..."
         echo
-        
+
         log "INFO" "Version changes preview:"
         preview_version "$SHARED_LIB_DIR" "mcp_shared_lib"
-        preview_version "$ANALYZER_DIR" "mcp_local_repo_analyzer" 
+        preview_version "$ANALYZER_DIR" "mcp_local_repo_analyzer"
         preview_version "$RECOMMENDER_DIR" "mcp_pr_recommender"
         echo
-        
+
         log "INFO" "DRY RUN completed. Use without --dry-run to execute."
         exit 0
     fi
-    
+
     # Run tests for all repositories
     log "INFO" "Running tests..."
     run_tests "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
-    run_tests "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1  
+    run_tests "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     run_tests "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
-    # Run quality checks for all repositories  
+
+    # Run quality checks for all repositories
     log "INFO" "Running quality checks..."
     run_quality_checks "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
     run_quality_checks "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     run_quality_checks "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
+
     # Create releases in dependency order
     log "INFO" "Creating releases..."
-    
+
     # Step 1: Release foundation library first
     create_release "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
-    
+
     # Step 2: Release analyzer and recommender (they can be parallel)
     create_release "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     create_release "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
+
     # Push all releases
     log "INFO" "Pushing releases..."
     push_releases "$SHARED_LIB_DIR" "mcp_shared_lib" || exit 1
     push_releases "$ANALYZER_DIR" "mcp_local_repo_analyzer" || exit 1
     push_releases "$RECOMMENDER_DIR" "mcp_pr_recommender" || exit 1
     echo
-    
+
     # Create GitHub releases
     log "INFO" "Creating GitHub releases..."
     create_github_release "$SHARED_LIB_DIR" "mcp_shared_lib"
     create_github_release "$ANALYZER_DIR" "mcp_local_repo_analyzer"
     create_github_release "$RECOMMENDER_DIR" "mcp_pr_recommender"
     echo
-    
+
     log "SUCCESS" "🎉 MCP Workspace release completed successfully!"
     log "INFO" "Next steps:"
     log "INFO" "  1. Check GitHub releases are created properly"

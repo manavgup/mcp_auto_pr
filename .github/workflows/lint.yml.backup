@@ -129,4 +129,4 @@ jobs:
       # 4️⃣  Run Linter / Validator
       # -----------------------------------------------------------
       - name: 🔍  Run ${{ matrix.id }}
-        run: ${{ matrix.cmd }} 
+        run: ${{ matrix.cmd }}

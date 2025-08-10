@@ -325,7 +325,7 @@ from = "src"
 ### **Single pyproject.toml Approach:**
 The consolidated repository will use a single `pyproject.toml` file that defines all three packages:
 - **mcp-local-repo-analyzer** - Git repository analysis server
-- **mcp-pr-recommender** - PR recommendation server  
+- **mcp-pr-recommender** - PR recommendation server
 - **mcp-shared-lib** - Shared library for both servers
 
 This approach:
@@ -340,7 +340,7 @@ The consolidated repository will use a single `tests/` directory with organized 
 - **tests/conftest.py** - Consolidated test configuration and fixtures
 - **tests/unit/** - Unit tests organized by package
   - `test_local_repo_analyzer/` - Local repo analyzer unit tests
-  - `test_pr_recommender/` - PR recommender unit tests  
+  - `test_pr_recommender/` - PR recommender unit tests
   - `test_shared_lib/` - Shared library unit tests
 - **tests/integration/** - Integration and end-to-end tests
   - `test_mcp_servers/` - MCP server integration tests

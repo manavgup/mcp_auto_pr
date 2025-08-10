@@ -1,18 +1,18 @@
 # Epic 2: Test Coverage
 
 ## 📋 Epic Overview
-**Epic ID**: E2  
-**Priority**: P0 (Critical)  
-**Estimated Effort**: 5 days  
-**Sprint**: 1  
-**Dependencies**: Epic 1 (CI/CD Stability)  
+**Epic ID**: E2
+**Priority**: P0 (Critical)
+**Estimated Effort**: 5 days
+**Sprint**: 1
+**Dependencies**: Epic 1 (CI/CD Stability)
 
 ## 🎯 Epic Goal
 Achieve 70%+ test coverage on critical code paths to ensure reliability and enable confident refactoring and feature development.
 
 ## 🚫 Current State
 - **mcp_local_repo_analyzer**: 15.65% coverage (1243/1497 lines uncovered)
-- **mcp_pr_recommender**: 0.00% coverage (1194/1194 lines uncovered)  
+- **mcp_pr_recommender**: 0.00% coverage (1194/1194 lines uncovered)
 - **mcp_shared_lib**: 13.22% coverage (1985/2361 lines uncovered)
 
 ## 🎯 Target State
@@ -24,9 +24,9 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
 ## 📋 User Stories
 
 ### Story 2.1: CLI Module Testing
-**As a** developer  
-**I want** comprehensive CLI testing  
-**So that** user-facing commands work reliably and provide good error messages  
+**As a** developer
+**I want** comprehensive CLI testing
+**So that** user-facing commands work reliably and provide good error messages
 
 #### Acceptance Criteria
 - [ ] CLI argument parsing tested for all commands
@@ -51,9 +51,9 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
   - [ ] Test configuration precedence (CLI > env > file)
 
 ### Story 2.2: MCP Tool Testing
-**As a** developer  
-**I want** all MCP tools thoroughly tested  
-**So that** the core functionality works correctly for users  
+**As a** developer
+**I want** all MCP tools thoroughly tested
+**So that** the core functionality works correctly for users
 
 #### Acceptance Criteria
 - [ ] Each tool's main functionality tested with real git repositories
@@ -76,9 +76,9 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
   - [ ] `validator_tool.py` - Test validation logic
 
 ### Story 2.3: Service Layer Testing
-**As a** developer  
-**I want** core business logic thoroughly tested  
-**So that** the application behaves correctly under various conditions  
+**As a** developer
+**I want** core business logic thoroughly tested
+**So that** the application behaves correctly under various conditions
 
 #### Acceptance Criteria
 - [ ] Git operations tested with mock and real repositories
@@ -103,9 +103,9 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
   - [ ] Test configuration loading and validation
 
 ### Story 2.4: Model and Utility Testing
-**As a** developer  
-**I want** data models and utilities well-tested  
-**So that** data integrity is maintained and utilities work correctly  
+**As a** developer
+**I want** data models and utilities well-tested
+**So that** data integrity is maintained and utilities work correctly
 
 #### Acceptance Criteria
 - [ ] All Pydantic models tested for validation
@@ -126,9 +126,9 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
   - [ ] `logging_utils.py` - Test logging configuration
 
 ### Story 2.5: Integration Testing Setup
-**As a** developer  
-**I want** integration tests between components  
-**So that** the system works correctly as a whole  
+**As a** developer
+**I want** integration tests between components
+**So that** the system works correctly as a whole
 
 #### Acceptance Criteria
 - [ ] End-to-end workflow tests (analyzer → recommender)
@@ -168,7 +168,7 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
 ### Prioritization (80/20 Rule)
 **Focus 80% effort on 20% most critical code:**
 1. **CLI interfaces** - Direct user impact
-2. **MCP tool implementations** - Core functionality  
+2. **MCP tool implementations** - Core functionality
 3. **Git operations** - Data integrity critical
 4. **Error handling paths** - User experience critical
 
@@ -222,11 +222,11 @@ Achieve 70%+ test coverage on critical code paths to ensure reliability and enab
 ### Week 1 (Days 4-6)
 #### Day 4: Foundation
 - [ ] Set up test infrastructure and fixtures
-- [ ] Create mock strategies for external dependencies  
+- [ ] Create mock strategies for external dependencies
 - [ ] Implement CLI testing for both packages
 - [ ] **Target**: 40% coverage
 
-#### Day 5: Core Functionality  
+#### Day 5: Core Functionality
 - [ ] Test all MCP tools with realistic scenarios
 - [ ] Test service layer business logic
 - [ ] Add integration tests for happy path

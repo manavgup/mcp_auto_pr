@@ -54,7 +54,7 @@ show_timer() {
 # Environment detection
 detect_environment() {
     print_status "Detecting environment..."
-    
+
     # Check for Docker
     if command -v docker &> /dev/null && docker info >/dev/null 2>&1; then
         INSTALL_METHOD="docker"
@@ -69,13 +69,13 @@ detect_environment() {
         export PATH="$HOME/.local/bin:$PATH"
         INSTALL_METHOD="poetry"
     fi
-    
+
     # Check for required tools
     if ! command -v git &> /dev/null; then
         print_error "Git is required but not installed"
         exit 1
     fi
-    
+
     # Auto-detect API key
     if [ -n "$OPENAI_API_KEY" ]; then
         print_success "OpenAI API key detected"
@@ -89,7 +89,7 @@ detect_environment() {
 # Quick Docker setup
 setup_docker() {
     print_status "Setting up with Docker (fastest method)..."
-    
+
     # Create .env if it doesn't exist
     if [ ! -f .env ]; then
         print_status "Creating .env file..."
@@ -98,7 +98,7 @@ setup_docker() {
             sed -i.bak "s/your_openai_api_key_here/$OPENAI_API_KEY/" .env
         fi
     fi
-    
+
     # Use pre-built images if available, otherwise build
     print_status "Starting MCP services..."
     if docker-compose pull --quiet 2>/dev/null; then
@@ -108,7 +108,7 @@ setup_docker() {
         print_status "Building images (this may take a moment)..."
         docker-compose up -d --build
     fi
-    
+
     # Quick health check
     print_status "Checking service health..."
     sleep 5
@@ -118,10 +118,10 @@ setup_docker() {
 # Quick Poetry setup
 setup_poetry() {
     print_status "Setting up with Poetry..."
-    
+
     # Run workspace setup
     ./setup.sh
-    
+
     # Quick health check for local services
     print_status "Services ready for local development"
 }
@@ -129,10 +129,10 @@ setup_poetry() {
 # Generate connection configs
 generate_configs() {
     print_status "Generating connection configurations..."
-    
+
     # Create configs directory
     mkdir -p configs
-    
+
     # VS Code/Cursor MCP config
     cat > configs/mcp-settings.json << EOF
 {
@@ -143,7 +143,7 @@ generate_configs() {
       "transport": "stdio"
     },
     "pr-recommender": {
-      "command": "docker", 
+      "command": "docker",
       "args": ["exec", "-i", "mcp-pr-recommender", "python", "-m", "mcp_pr_recommender.main"],
       "transport": "stdio"
     }
@@ -164,7 +164,7 @@ EOF
     },
     "pr-recommender": {
       "timeout": 120,
-      "type": "stdio", 
+      "type": "stdio",
       "command": "poetry",
       "args": ["run", "python", "-m", "mcp_pr_recommender.main"],
       "cwd": "./mcp_pr_recommender",
@@ -184,7 +184,7 @@ show_next_steps() {
     echo ""
     echo -e "${GREEN}${BOLD}🎉 MCP Auto PR is ready!${NC}"
     echo ""
-    
+
     if [ "$INSTALL_METHOD" = "docker" ]; then
         echo -e "${BLUE}📊 Services running:${NC}"
         echo "   • Local Repo Analyzer: http://localhost:9070"
@@ -195,7 +195,7 @@ show_next_steps() {
         echo "   curl http://localhost:9071/health"
         echo ""
     fi
-    
+
     echo -e "${BLUE}🔌 IDE Integration:${NC}"
     echo "   • VS Code/Cursor: Copy configs/mcp-settings.json to your MCP settings"
     echo "   • Cline: Copy configs/cline-mcp-settings.json to your Cline settings"
@@ -223,10 +223,10 @@ show_next_steps() {
 main() {
     print_header
     start_timer
-    
+
     # Environment detection
     detect_environment
-    
+
     # Run appropriate setup
     case $INSTALL_METHOD in
         docker)
@@ -240,10 +240,10 @@ main() {
             exit 1
             ;;
     esac
-    
+
     # Generate configs
     generate_configs
-    
+
     # Show results
     show_timer
     show_next_steps

@@ -1,11 +1,11 @@
 # Epic 4: Shared Library Improvements
 
 ## 📋 Epic Overview
-**Epic ID**: E4  
-**Priority**: P1 (High)  
-**Estimated Effort**: 3 days  
-**Sprint**: 2  
-**Dependencies**: Epic 2 (Test Coverage) - need good tests before refactoring  
+**Epic ID**: E4
+**Priority**: P1 (High)
+**Estimated Effort**: 3 days
+**Sprint**: 2
+**Dependencies**: Epic 2 (Test Coverage) - need good tests before refactoring
 
 ## 🎯 Epic Goal
 Improve the structure, naming, and organization of shared code to create a production-grade foundation that's maintainable and extensible.
@@ -28,12 +28,12 @@ A clean, well-organized shared codebase with:
 ## 📋 User Stories
 
 ### Story 4.1: Rename and Restructure Shared Library
-**As a** developer  
-**I want** the shared library to have clear, professional naming  
-**So that** the codebase feels production-ready and is easy to navigate  
+**As a** developer
+**I want** the shared library to have clear, professional naming
+**So that** the codebase feels production-ready and is easy to navigate
 
 #### Acceptance Criteria
-- [ ] mcp_shared_lib renamed to "shared" 
+- [ ] mcp_shared_lib renamed to "shared"
 - [ ] Clear folder structure with logical grouping
 - [ ] Related functionality co-located
 - [ ] Import statements updated throughout codebase
@@ -44,7 +44,7 @@ A clean, well-organized shared codebase with:
 - [ ] **Rename package**: mcp_shared_lib → shared
 - [ ] **Reorganize structure**:
   - [ ] Create `shared/git/` for git-related code
-  - [ ] Create `shared/mcp/` for MCP protocol code  
+  - [ ] Create `shared/mcp/` for MCP protocol code
   - [ ] Create `shared/common/` for general utilities
   - [ ] Create `shared/models/` for consolidated data models
 - [ ] **Update all import statements** in analyzer and recommender
@@ -52,9 +52,9 @@ A clean, well-organized shared codebase with:
 - [ ] **Test imports work correctly**
 
 ### Story 4.2: Consolidate and Cleanup Models
-**As a** developer  
-**I want** data models organized logically in fewer files  
-**So that** I can find and use models efficiently without hunting through many small files  
+**As a** developer
+**I want** data models organized logically in fewer files
+**So that** I can find and use models efficiently without hunting through many small files
 
 #### Acceptance Criteria
 - [ ] Related models consolidated into single files
@@ -66,7 +66,7 @@ A clean, well-organized shared codebase with:
 #### Tasks
 - [ ] **Consolidate git models** into `shared/models/git.py`:
   - [ ] LocalRepository (from git/repository.py)
-  - [ ] FileStatus, WorkingDirectoryChanges (from git/changes.py)  
+  - [ ] FileStatus, WorkingDirectoryChanges (from git/changes.py)
   - [ ] Commit models (from git/commits.py)
   - [ ] File models (from git/files.py)
 - [ ] **Consolidate analysis models** into `shared/models/analysis.py`:
@@ -77,9 +77,9 @@ A clean, well-organized shared codebase with:
 - [ ] **Add model documentation** and usage examples
 
 ### Story 4.3: Reorganize Git-Related Code
-**As a** developer  
-**I want** all git-related functionality grouped together  
-**So that** I can easily find and maintain git operations, config, and utilities  
+**As a** developer
+**I want** all git-related functionality grouped together
+**So that** I can easily find and maintain git operations, config, and utilities
 
 #### Acceptance Criteria
 - [ ] All git code under `shared/git/` directory
@@ -97,9 +97,9 @@ A clean, well-organized shared codebase with:
 - [ ] **Add git module documentation**
 
 ### Story 4.4: Remove Dead Code and Unused Abstractions
-**As a** developer  
-**I want** unused code removed from the shared library  
-**So that** the codebase stays lean and doesn't confuse future developers  
+**As a** developer
+**I want** unused code removed from the shared library
+**So that** the codebase stays lean and doesn't confuse future developers
 
 #### Acceptance Criteria
 - [ ] BaseMCPTool removed (0 usages confirmed)
@@ -124,9 +124,9 @@ A clean, well-organized shared codebase with:
   - [ ] Keep only truly shared configuration classes
 
 ### Story 4.5: Update Package-Specific Code
-**As a** developer  
-**I want** package-specific configuration moved to the appropriate packages  
-**So that** shared code only contains truly shared functionality  
+**As a** developer
+**I want** package-specific configuration moved to the appropriate packages
+**So that** shared code only contains truly shared functionality
 
 #### Acceptance Criteria
 - [ ] GitAnalyzerSettings moved to mcp_local_repo_analyzer

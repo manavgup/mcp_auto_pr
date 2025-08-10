@@ -67,4 +67,4 @@ get_default_branch() {
     done
     echo "main"  # Default fallback
     return 0
-} 
+}

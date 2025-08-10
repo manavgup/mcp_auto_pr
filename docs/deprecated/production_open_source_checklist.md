@@ -221,4 +221,4 @@ Use this checklist to track progress toward making `mcp_auto_pr` production-grad
 - Check off each item as you complete it.
 - Add notes or links to PRs/issues as needed.
 - Update this file regularly to track progress.
-- Focus on HIGH PRIORITY items first for maximum impact. 
+- Focus on HIGH PRIORITY items first for maximum impact.

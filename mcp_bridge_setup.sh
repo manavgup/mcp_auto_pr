@@ -48,16 +48,16 @@ check_port $RECOMMENDER_PORT
 # Function to start bridge for analyzer
 start_analyzer_bridge() {
     echo -e "${BLUE}🚀 Starting analyzer bridge on port $ANALYZER_PORT...${NC}"
-    
+
     cd "$WORKSPACE_ROOT/mcp_local_repo_analyzer"
-    
+
     # Start the bridge in background
     python3 -m mcpgateway.translate \
         --stdio "poetry run local-git-analyzer" \
         --port $ANALYZER_PORT \
         --cors "http://localhost:4444" "http://localhost:3000" "http://127.0.0.1:4444" \
         --logLevel info > analyzer_bridge.log 2>&1 &
-    
+
     ANALYZER_PID=$!
     echo $ANALYZER_PID > analyzer_bridge.pid
     echo -e "${GREEN}✅ Analyzer bridge started (PID: $ANALYZER_PID)${NC}"
@@ -70,9 +70,9 @@ start_analyzer_bridge() {
 # Function to start bridge for recommender
 start_recommender_bridge() {
     echo -e "${BLUE}🚀 Starting recommender bridge on port $RECOMMENDER_PORT...${NC}"
-    
+
     cd "$WORKSPACE_ROOT/mcp_pr_recommender"
-    
+
     # Check if .env file exists and has OPENAI_API_KEY
     if [ ! -f ".env" ] || ! grep -q "OPENAI_API_KEY" .env; then
         echo -e "${YELLOW}⚠️  No OPENAI_API_KEY found in .env file${NC}"
@@ -84,14 +84,14 @@ start_recommender_bridge() {
             return 1
         fi
     fi
-    
+
     # Start the bridge in background
     python3 -m mcpgateway.translate \
         --stdio "poetry run pr-recommender" \
         --port $RECOMMENDER_PORT \
         --cors "http://localhost:4444" "http://localhost:3000" "http://127.0.0.1:4444" \
         --logLevel info > recommender_bridge.log 2>&1 &
-    
+
     RECOMMENDER_PID=$!
     echo $RECOMMENDER_PID > recommender_bridge.pid
     echo -e "${GREEN}✅ Recommender bridge started (PID: $RECOMMENDER_PID)${NC}"
@@ -104,9 +104,9 @@ start_recommender_bridge() {
 # Function to test bridges
 test_bridges() {
     echo -e "${YELLOW}🧪 Testing bridge endpoints...${NC}"
-    
+
     sleep 3  # Give bridges time to start
-    
+
     # Test analyzer bridge
     echo "Testing analyzer bridge health..."
     if curl -s -f "http://localhost:$ANALYZER_PORT/healthz" > /dev/null; then
@@ -114,7 +114,7 @@ test_bridges() {
     else
         echo -e "${RED}❌ Analyzer bridge health check failed${NC}"
     fi
-    
+
     # Test recommender bridge
     echo "Testing recommender bridge health..."
     if curl -s -f "http://localhost:$RECOMMENDER_PORT/healthz" > /dev/null; then
@@ -127,7 +127,7 @@ test_bridges() {
 # Function to register with gateway
 register_with_gateway() {
     echo -e "${YELLOW}🔗 Registering bridges with MCP Gateway...${NC}"
-    
+
     # Generate JWT token
     # Try docker exec first, fall back to docker run
     JWT_TOKEN=$(docker exec mcpgateway python3 -m mcpgateway.utils.create_jwt_token \
@@ -148,7 +148,7 @@ register_with_gateway() {
 
     # Register individual tools from analyzer
     echo "Registering analyzer tools..."
-    
+
     # Analyze working directory tool
     curl -X POST -H "Authorization: Bearer $MCPGATEWAY_BEARER_TOKEN" \
       -H "Content-Type: application/json" \
@@ -252,7 +252,7 @@ register_with_gateway() {
 
     # Register PR recommendation tools
     echo "Registering PR recommender tools..."
-    
+
     curl -X POST -H "Authorization: Bearer $MCPGATEWAY_BEARER_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
@@ -292,7 +292,7 @@ register_with_gateway() {
 
     echo ""
     echo -e "${GREEN}🔐 Your JWT token:${NC} $JWT_TOKEN"
-    
+
     # Show usage examples
     echo ""
     echo -e "${BLUE}📖 Usage Examples:${NC}"
@@ -315,7 +315,7 @@ show_status() {
     echo ""
     echo -e "${BLUE}📊 Bridge Status:${NC}"
     echo "─────────────────────────────────────────"
-    
+
     # Check analyzer bridge
     if [ -f "$WORKSPACE_ROOT/mcp_local_repo_analyzer/analyzer_bridge.pid" ]; then
         ANALYZER_PID=$(cat "$WORKSPACE_ROOT/mcp_local_repo_analyzer/analyzer_bridge.pid")
@@ -327,7 +327,7 @@ show_status() {
     else
         echo -e "${RED}❌ Analyzer Bridge:${NC} Not started"
     fi
-    
+
     # Check recommender bridge
     if [ -f "$WORKSPACE_ROOT/mcp_pr_recommender/recommender_bridge.pid" ]; then
         RECOMMENDER_PID=$(cat "$WORKSPACE_ROOT/mcp_pr_recommender/recommender_bridge.pid")
@@ -339,7 +339,7 @@ show_status() {
     else
         echo -e "${RED}❌ Recommender Bridge:${NC} Not started"
     fi
-    
+
     echo ""
     echo -e "${BLUE}🌐 Available Endpoints:${NC}"
     echo "  Analyzer SSE:     http://localhost:$ANALYZER_PORT/sse"
@@ -353,7 +353,7 @@ show_status() {
 # Function to stop bridges
 stop_bridges() {
     echo -e "${YELLOW}🛑 Stopping MCP bridges...${NC}"
-    
+
     # Stop analyzer bridge
     if [ -f "$WORKSPACE_ROOT/mcp_local_repo_analyzer/analyzer_bridge.pid" ]; then
         ANALYZER_PID=$(cat "$WORKSPACE_ROOT/mcp_local_repo_analyzer/analyzer_bridge.pid")
@@ -363,7 +363,7 @@ stop_bridges() {
         fi
         rm -f "$WORKSPACE_ROOT/mcp_local_repo_analyzer/analyzer_bridge.pid"
     fi
-    
+
     # Stop recommender bridge
     if [ -f "$WORKSPACE_ROOT/mcp_pr_recommender/recommender_bridge.pid" ]; then
         RECOMMENDER_PID=$(cat "$WORKSPACE_ROOT/mcp_pr_recommender/recommender_bridge.pid")

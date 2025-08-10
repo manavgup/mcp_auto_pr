@@ -17,4 +17,4 @@ echo "Running workspace setup..."
 "$SCRIPT_DIR/scripts/setup-workspace.sh"
 
 echo ""
-echo "✅ Setup complete! Check the output above for next steps." 
+echo "✅ Setup complete! Check the output above for next steps."

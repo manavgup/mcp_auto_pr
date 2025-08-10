@@ -1,10 +1,10 @@
 # Implementation Plan: Issue #6 - Fix GitHub Actions with Pre-commit Alignment
 
 ## 📋 Overview
-**Issue**: https://github.com/manavgup/mcp_auto_pr/issues/6  
-**Goal**: Fix GitHub Actions workflows and align them with local pre-commit hooks for consistent results  
-**Timeline**: 1 day (8 hours)  
-**Priority**: P0 Critical  
+**Issue**: https://github.com/manavgup/mcp_auto_pr/issues/6
+**Goal**: Fix GitHub Actions workflows and align them with local pre-commit hooks for consistent results
+**Timeline**: 1 day (8 hours)
+**Priority**: P0 Critical
 
 ## 🎯 Success Criteria
 - All GitHub Actions workflows pass without exit code 127 errors
@@ -60,20 +60,20 @@ repos:
         args: ['--maxkb=1000']
       - id: check-merge-conflict
       - id: debug-statements
-  
+
   - repo: https://github.com/psf/black
     rev: 23.12.1
     hooks:
       - id: black
         language_version: python3.11
         args: ['--line-length=88']
-  
+
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.1.11
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
-  
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
@@ -164,21 +164,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          
+
       - name: Install pre-commit
         run: pip install pre-commit
-        
+
       - name: Cache pre-commit
         uses: actions/cache@v3
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-          
+
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
@@ -191,33 +191,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           version: '1.7.1'
           virtualenvs-create: true
           virtualenvs-in-project: true
-          
+
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-          
+
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --with test
-        
+
       - name: Install project
         run: poetry install --no-interaction
-        
+
       - name: Run tests
         run: |
           poetry run pytest tests/ \
@@ -225,7 +225,7 @@ jobs:
             --cov-report=xml \
             --cov-report=term-missing \
             --junitxml=pytest.xml
-            
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -241,7 +241,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -249,7 +249,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         if: always()
@@ -360,19 +360,19 @@ repos=("mcp_auto_pr" "mcp_local_repo_analyzer" "mcp_pr_recommender" "mcp_shared_
 for repo in "${repos[@]}"; do
     echo "=== Validating $repo ==="
     cd "../$repo"
-    
+
     # Check pre-commit config exists
     if [[ ! -f .pre-commit-config.yaml ]]; then
         echo "❌ Missing .pre-commit-config.yaml"
         continue
     fi
-    
+
     # Check GitHub workflow exists
     if [[ ! -f .github/workflows/ci.yml ]]; then
         echo "❌ Missing .github/workflows/ci.yml"
         continue
     fi
-    
+
     # Run pre-commit
     echo "Running pre-commit..."
     if pre-commit run --all-files; then
@@ -380,15 +380,15 @@ for repo in "${repos[@]}"; do
     else
         echo "❌ Pre-commit failed"
     fi
-    
+
     # Check tool versions match
     echo "Checking tool versions..."
     black_version=$(grep "rev:" .pre-commit-config.yaml | grep black -A1 | tail -1 | sed 's/.*rev: //')
     ruff_version=$(grep "rev:" .pre-commit-config.yaml | grep ruff -A1 | tail -1 | sed 's/.*rev: //')
-    
+
     echo "Black version: $black_version"
     echo "Ruff version: $ruff_version"
-    
+
     cd -
 done
 ```
@@ -401,7 +401,7 @@ Create/update README sections in each repo:
 ## Development Setup
 
 ### Prerequisites
-- Python 3.10+ 
+- Python 3.10+
 - Poetry 1.7+
 - Git
 

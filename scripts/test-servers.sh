@@ -13,7 +13,7 @@ else
     exit 1
 fi
 
-# Test PR recommender  
+# Test PR recommender
 echo "Testing PR Recommender..."
 if curl -s "http://localhost:9071/health" | grep -q "ok"; then
     echo "✅ PR recommender health check passed"

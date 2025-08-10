@@ -30,7 +30,7 @@
 ### 🟡 Moderate Issues
 
 #### 3. Uncommitted Changes
-- **mcp_auto_pr**: 
+- **mcp_auto_pr**:
   - Untracked: PYPI_PUBLISHING.md, REMOVE_SHARED_LIB.md, release scripts
   - Modified: .DS_Store
 - **mcp_local_repo_analyzer**:

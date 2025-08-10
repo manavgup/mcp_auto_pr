@@ -1,11 +1,11 @@
 # Epic 3: Development Workflow
 
 ## 📋 Epic Overview
-**Epic ID**: E3  
-**Priority**: P1 (High)  
-**Estimated Effort**: 2 days  
-**Sprint**: 1  
-**Dependencies**: None (can run parallel with other epics)  
+**Epic ID**: E3
+**Priority**: P1 (High)
+**Estimated Effort**: 2 days
+**Sprint**: 1
+**Dependencies**: None (can run parallel with other epics)
 
 ## 🎯 Epic Goal
 Establish a clean, consistent development workflow across all repositories with standardized tooling and no uncommitted changes blocking development.
@@ -28,9 +28,9 @@ A streamlined development workflow where:
 ## 📋 User Stories
 
 ### Story 3.1: Clean Repository State
-**As a** developer  
-**I want** all repositories to have clean git status  
-**So that** I can work without conflicts and understand what changes are intentional  
+**As a** developer
+**I want** all repositories to have clean git status
+**So that** I can work without conflicts and understand what changes are intentional
 
 #### Acceptance Criteria
 - [ ] All repositories show `git status` clean
@@ -47,7 +47,7 @@ A streamlined development workflow where:
   - [ ] Update .gitignore if needed
 
 - **mcp_local_repo_analyzer**:
-  - [ ] Review modified: CHANGELOG.md, poetry.lock, pyproject.toml  
+  - [ ] Review modified: CHANGELOG.md, poetry.lock, pyproject.toml
   - [ ] Review untracked: echo_server.py, mock_auth_server.py
   - [ ] Commit necessary changes, remove temp files
 
@@ -61,9 +61,9 @@ A streamlined development workflow where:
   - [ ] Review pyproject.toml changes
 
 ### Story 3.2: Standardized Code Quality Tools
-**As a** developer  
-**I want** consistent code quality standards across all repositories  
-**So that** code style is uniform and quality is maintained automatically  
+**As a** developer
+**I want** consistent code quality standards across all repositories
+**So that** code style is uniform and quality is maintained automatically
 
 #### Acceptance Criteria
 - [ ] Single pre-commit configuration template applied to all repos
@@ -88,9 +88,9 @@ A streamlined development workflow where:
   - [ ] Update CI to validate pre-commit compliance
 
 ### Story 3.3: Development Environment Setup
-**As a** developer  
-**I want** clear, simple instructions to set up a development environment  
-**So that** I can start contributing quickly without friction  
+**As a** developer
+**I want** clear, simple instructions to set up a development environment
+**So that** I can start contributing quickly without friction
 
 #### Acceptance Criteria
 - [ ] Single command setup for each repository
@@ -108,9 +108,9 @@ A streamlined development workflow where:
 - [ ] Test setup on fresh system
 
 ### Story 3.4: Contribution Guidelines
-**As a** developer  
-**I want** clear guidelines for contributing to the project  
-**So that** contributions are consistent and review process is smooth  
+**As a** developer
+**I want** clear guidelines for contributing to the project
+**So that** contributions are consistent and review process is smooth
 
 #### Acceptance Criteria
 - [ ] CONTRIBUTING.md file with clear guidelines
@@ -127,9 +127,9 @@ A streamlined development workflow where:
 - [ ] Set up branch protection rules (if applicable)
 
 ### Story 3.5: Development Scripts and Automation
-**As a** developer  
-**I want** convenient scripts for common development tasks  
-**So that** I can be productive without memorizing complex commands  
+**As a** developer
+**I want** convenient scripts for common development tasks
+**So that** I can be productive without memorizing complex commands
 
 #### Acceptance Criteria
 - [ ] Makefile or script collection with common tasks
@@ -246,19 +246,19 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
-  
+
   - repo: https://github.com/psf/black
     rev: 23.12.1
     hooks:
       - id: black
         language_version: python3.11
-  
+
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.1.11
     hooks:
       - id: ruff
         args: [--fix]
-  
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:

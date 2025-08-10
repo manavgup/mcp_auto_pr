@@ -16,14 +16,14 @@ MCP Auto PR is comprised of two MCP agents:
 ![PR Recommender](docs/images/mcp_pr_recommender_tiny.gif)
 
 ## MCP Auto PR Use Cases
-```mermaid 
+```mermaid
   graph TD
     subgraph "High-Level Workflow"
         Dev[👨‍💻 Developer]
         IDE[💻 IDE + AI Assistant]
         System[🤖 MCP Auto PR System]
         Results[📊 Intelligent PR Strategy]
-        
+
         Dev --> IDE
         IDE --> System
         System --> Results
@@ -32,27 +32,27 @@ MCP Auto PR is comprised of two MCP agents:
 ```
 
 
-```mermaid 
+```mermaid
 graph TB
     subgraph "Step 1: Analysis Request"
-        Dev1[👨‍💻 Developer] 
+        Dev1[👨‍💻 Developer]
         Chat1["💬 'Analyze my repository changes'"]
         Analyzer[🔍 MCP Repo Analyzer<br/>Port 9070]
         Analysis["📊 Analysis Results<br/>• 12 files, 3 repos<br/>• Risk assessment<br/>• Change categorization"]
     end
-    
-    subgraph "Step 2: Recommendation Request"  
+
+    subgraph "Step 2: Recommendation Request"
         Dev2[👨‍💻 Developer]
         Chat2["💬 'Generate PR recommendations<br/>for these changes'"]
         Recommender[🧠 MCP PR Recommender<br/>Port 9071]
         PRs["🎯 PR Recommendations<br/>• 6 intelligent PRs<br/>• Dependency ordering<br/>• Review time estimates"]
     end
-    
+
     Dev1 --> Chat1
     Chat1 --> Analyzer
     Analyzer --> Analysis
     Analysis --> Dev1
-    
+
     Dev1 -.-> Dev2
     Dev2 --> Chat2
     Chat2 --> Recommender
@@ -93,7 +93,7 @@ cd mcp_auto_pr
 # Docker setup
 ./install.sh --docker
 
-# Poetry setup  
+# Poetry setup
 ./install.sh --poetry
 
 # Legacy setup
@@ -123,7 +123,7 @@ docker-compose up -d
 # View logs
 docker-compose logs -f
 
-# Stop services  
+# Stop services
 docker-compose down
 
 # Health check
@@ -171,7 +171,7 @@ After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
       "transport": "stdio"
     },
     "pr-recommender": {
-      "command": "docker", 
+      "command": "docker",
       "args": ["exec", "-i", "mcp-pr-recommender", "python", "-m", "mcp_pr_recommender.main"],
       "transport": "stdio"
     }
@@ -192,7 +192,7 @@ After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
     },
     "pr-recommender": {
       "timeout": 120,
-      "type": "stdio", 
+      "type": "stdio",
       "command": "pr-recommender",
       "env": {
         "OPENAI_API_KEY": "${OPENAI_API_KEY}"
@@ -215,7 +215,7 @@ After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
     },
     "pr-recommender": {
       "timeout": 120,
-      "type": "stdio", 
+      "type": "stdio",
       "command": "poetry",
       "args": ["run", "python", "-m", "mcp_pr_recommender.main"],
       "cwd": "./mcp_pr_recommender",
@@ -236,7 +236,7 @@ After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
 - `compare_with_remote` - Compare local branch with remote branch
 - `analyze_repository_health` - Overall repository health metrics
 
-### MCP PR Recommender  
+### MCP PR Recommender
 - `generate_pr_recommendations` - Generate intelligent PR groupings with dependency ordering
 - `analyze_pr_feasibility` - Analyze PR feasibility and potential conflicts
 - `get_strategy_options` - Available grouping strategies (semantic, size-based, etc.)
@@ -247,7 +247,7 @@ After installing via `pip install mcp-local-repo-analyzer mcp-pr-recommender`:
 ```
 mcp_workspace/
 ├── mcp_auto_pr/                    # Main coordination repo
-│   ├── docker-compose.yml         # Docker orchestration  
+│   ├── docker-compose.yml         # Docker orchestration
 │   ├── scripts/                   # Setup and utility scripts
 │   │   ├── docker-setup.sh       # Docker deployment
 │   │   ├── test-servers.sh       # Server testing
@@ -387,7 +387,7 @@ The MCP servers support multiple transport protocols:
 cd ../mcp_local_repo_analyzer
 poetry run python -m mcp_local_repo_analyzer.main
 
-cd ../mcp_pr_recommender  
+cd ../mcp_pr_recommender
 poetry run python -m mcp_pr_recommender.main
 ```
 
@@ -440,7 +440,7 @@ poetry run python -m mcp_pr_recommender.main --transport sse
 ## 🚀 Features
 
 - **🔍 Intelligent Analysis** - AI-powered change detection and categorization
-- **🎯 Semantic Grouping** - Logical PR boundaries based on code relationships  
+- **🎯 Semantic Grouping** - Logical PR boundaries based on code relationships
 - **⚠️ Risk Assessment** - Identifies potential conflicts and high-risk changes
 - **📊 Multi-Repository** - Coordinate changes across multiple repositories
 - **🐳 Docker Ready** - One-command deployment with health monitoring
@@ -456,7 +456,7 @@ poetry run python -m mcp_pr_recommender.main --transport sse
 ```
 mcp_pr_workspace/
 ├── mcp_auto_pr/                 # 🚀 Orchestration & deployment
-├── mcp_shared_lib/              # 📚 Foundation library  
+├── mcp_shared_lib/              # 📚 Foundation library
 ├── mcp_local_repo_analyzer/     # 🔍 Git analysis engine
 ├── mcp_pr_recommender/          # 🧠 AI recommendations
 ├── Makefile                     # Root workspace commands
@@ -467,7 +467,7 @@ mcp_pr_workspace/
 ```bash
 # From workspace root directory
 make test-all           # Test all 4 repositories
-make lint               # Lint all repositories  
+make lint               # Lint all repositories
 make format             # Format all repositories
 make install-all        # Install all dependencies
 make dev-setup          # Complete development setup
@@ -490,7 +490,7 @@ curl -X POST http://localhost:9070/analyze_working_directory \
 # Generate coordinated PR recommendations
 curl -X POST http://localhost:9071/generate_pr_recommendations \
   -H "Content-Type: application/json" \
-  -d '{"analysis_results": "..."}' 
+  -d '{"analysis_results": "..."}'
 ```
 
 #### Custom Transport Configurations

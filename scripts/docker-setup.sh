@@ -23,7 +23,7 @@ if [ ! -d "../mcp_local_repo_analyzer" ]; then
 fi
 
 if [ ! -d "../mcp_pr_recommender" ]; then
-    echo "❌ mcp_pr_recommender directory not found at ../mcp_pr_recommender" 
+    echo "❌ mcp_pr_recommender directory not found at ../mcp_pr_recommender"
     echo "💡 Make sure you've run the main setup.sh to clone all repositories"
     exit 1
 fi

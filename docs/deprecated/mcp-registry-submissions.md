@@ -164,7 +164,7 @@ Create JSON files in the appropriate directory structure:
   "keywords": ["git", "repository-analysis", "mcp-server", "version-control"],
   "capabilities": [
     "analyze_working_directory",
-    "analyze_staged_changes", 
+    "analyze_staged_changes",
     "get_outstanding_summary",
     "compare_with_remote"
   ],
@@ -185,7 +185,7 @@ Create JSON files in the appropriate directory structure:
 **servers/pr-recommender.json:**
 ```json
 {
-  "name": "mcp-pr-recommender", 
+  "name": "mcp-pr-recommender",
   "description": "AI-powered MCP server for intelligent PR grouping recommendations",
   "author": "Manav Gupta",
   "version": "0.2.0",
@@ -197,7 +197,7 @@ Create JSON files in the appropriate directory structure:
   "capabilities": [
     "generate_pr_recommendations",
     "analyze_pr_feasibility",
-    "get_strategy_options", 
+    "get_strategy_options",
     "validate_pr_recommendations"
   ],
   "transports": ["stdio", "http", "websocket", "sse"],
@@ -278,5 +278,5 @@ gh pr create --title "Add MCP servers: local-repo-analyzer and pr-recommender" -
 
 ---
 
-**Last Updated**: August 7, 2025  
+**Last Updated**: August 7, 2025
 **Status**: Ready for Phase 2 submission after v0.2.0 release

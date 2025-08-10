@@ -63,10 +63,10 @@ clone_repo() {
     local repo_name=$1
     local repo_url=$2
     local workspace_root=$3
-    
+
     local repo_path="$workspace_root/$repo_name"
     local default_branch=$(get_default_branch "$repo_name")
-    
+
     if [ -d "$repo_path" ]; then
         print_warning "Repository $repo_name already exists at $repo_path"
         print_status "Pulling latest changes..."
@@ -76,7 +76,7 @@ clone_repo() {
     else
         print_status "Cloning $repo_name..."
         cd "$workspace_root"
-        
+
         # Try HTTPS first, then SSH
         if git clone "$GIT_REMOTE_HTTPS_PREFIX/$repo_url.git" "$repo_name" 2>/dev/null; then
             print_success "Successfully cloned $repo_name via HTTPS"
@@ -90,7 +90,7 @@ clone_repo() {
             print_status "  git clone $GIT_REMOTE_SSH_PREFIX/$repo_url.git $repo_name"
             return 1
         fi
-        
+
         cd - > /dev/null
     fi
 }
@@ -98,20 +98,20 @@ clone_repo() {
 # Function to setup Python environment
 setup_python_env() {
     local workspace_root=$1
-    
+
     print_status "Setting up Python environment..."
-    
+
     # Check if poetry is available
     if ! command -v poetry &> /dev/null; then
         print_warning "Poetry is not installed. Installing dependencies manually..."
         return 0
     fi
-    
+
     # Install dependencies for each repo
     for repo_info in "${REPOS[@]}"; do
         local repo_name=$(echo "$repo_info" | cut -d: -f1)
         local repo_path="$workspace_root/$repo_name"
-        
+
         if [ -d "$repo_path" ] && [ -f "$repo_path/pyproject.toml" ]; then
             print_status "Installing dependencies for $repo_name..."
             cd "$repo_path"
@@ -124,11 +124,11 @@ setup_python_env() {
 # Function to create workspace file
 create_workspace_file() {
     local workspace_root=$1
-    
+
     print_status "Creating VSCode workspace file..."
-    
+
     local workspace_file="$workspace_root/$WORKSPACE_FILE"
-    
+
     cat > "$workspace_file" << EOF
 {
     "folders": [
@@ -155,7 +155,7 @@ EOF
 
     # Remove the trailing comma from the last entry and close the folders array
     sed -i '' '$ s/,$//' "$workspace_file"
-    
+
     cat >> "$workspace_file" << EOF
     ],
     "settings": {
@@ -177,14 +177,14 @@ EOF
     }
 }
 EOF
-    
+
     print_success "Created workspace file at $workspace_file"
 }
 
 # Function to display next steps
 show_next_steps() {
     local workspace_root=$1
-    
+
     echo ""
     echo -e "${GREEN}🎉 Workspace setup complete!${NC}"
     echo ""
@@ -218,33 +218,33 @@ main() {
     echo -e "${BLUE}🚀 MCP Auto PR Workspace Setup${NC}"
     echo "=================================="
     echo ""
-    
+
     # Pre-flight checks
     check_git
     check_git_repo
-    
+
     # Get workspace root
     local workspace_root=$(get_workspace_root)
     print_status "Workspace root: $workspace_root"
-    
+
     # Clone repositories
     print_status "Cloning required repositories..."
     for repo_info in "${REPOS[@]}"; do
         local repo_name=$(echo "$repo_info" | cut -d: -f1)
         local repo_url=$(echo "$repo_info" | cut -d: -f2)
-        
+
         clone_repo "$repo_name" "$repo_url" "$workspace_root"
     done
-    
+
     # Setup Python environment
     setup_python_env "$workspace_root"
-    
+
     # Create workspace file
     create_workspace_file "$workspace_root"
-    
+
     # Show next steps
     show_next_steps "$workspace_root"
 }
 
 # Run main function
-main "$@" 
+main "$@"

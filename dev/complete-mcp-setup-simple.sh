@@ -56,12 +56,12 @@ get_workspace_path() {
 # UPDATED: Simple working local repo analyzer startup
 start_local_repo_analyzer() {
     echo "🎯 Starting local repo analyzer (FIXED - direct stdio mode)..."
-    
+
     # Use direct stdio mode - this works perfectly as we confirmed
     pm2 start "cd $MCP_WORKSPACE_DIR/mcp_local_repo_analyzer && poetry run local-git-analyzer" \
         --name local-repo-analyzer \
         --cwd "$MCP_WORKSPACE_DIR/mcp_local_repo_analyzer"
-    
+
     echo "✅ Local repo analyzer started in direct stdio mode"
     echo "ℹ️  Note: This runs in stdio mode for direct MCP client connections"
 }
@@ -71,7 +71,7 @@ test_server_health() {
     local port=$1
     local name=$2
     local max_attempts=10
-    
+
     for i in $(seq 1 $max_attempts); do
         if curl -s "http://localhost:$port/healthz" | grep -q "ok"; then
             echo "✅ $name is healthy"
@@ -169,7 +169,7 @@ sleep 15
 # Health check for gateway-connected servers
 echo "🔍 Checking server health..."
 test_server_health 9000 "Filesystem Downloads"
-test_server_health 9001 "Filesystem Documents" 
+test_server_health 9001 "Filesystem Documents"
 test_server_health 9002 "Memory Server"
 test_server_health 9003 "GitHub Server"
 

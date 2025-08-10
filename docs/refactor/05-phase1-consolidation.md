@@ -79,19 +79,19 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-  
+
   - repo: https://github.com/psf/black
     rev: 23.12.1
     hooks:
       - id: black
         language_version: python3.11
-  
+
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.1.11
     hooks:
       - id: ruff
         args: [--fix]
-  
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
@@ -202,7 +202,7 @@ poetry run python -m mcp_pr_recommender.main --help
 
 ### Import Errors
 **Issue**: ModuleNotFoundError
-**Solution**: 
+**Solution**:
 - Check PYTHONPATH includes src/
 - Verify __init__.py files exist
 - Update import statements

@@ -6,7 +6,7 @@
 # Workspace configuration
 WORKSPACE_ROOT := $(shell pwd)/..
 SHARED_LIB := $(WORKSPACE_ROOT)/mcp_shared_lib
-LOCAL_ANALYZER := $(WORKSPACE_ROOT)/mcp_local_repo_analyzer  
+LOCAL_ANALYZER := $(WORKSPACE_ROOT)/mcp_local_repo_analyzer
 PR_RECOMMENDER := $(WORKSPACE_ROOT)/mcp_pr_recommender
 AUTO_PR := $(WORKSPACE_ROOT)/mcp_auto_pr
 

@@ -1,0 +1,13 @@
+# Pre-commit configuration for mcp_auto_pr (orchestration repo)
+# Simplified config for non-Python orchestration repository
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict

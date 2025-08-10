@@ -224,7 +224,7 @@ cd mcp_local_repo_analyzer
 poetry build
 poetry publish
 
-# Build and publish recommender  
+# Build and publish recommender
 cd mcp_pr_recommender
 poetry build
 poetry publish
