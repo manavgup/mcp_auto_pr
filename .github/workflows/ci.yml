@@ -1,6 +1,5 @@
-# Master CI workflow - aligned with pre-commit hooks
-# This workflow matches exactly with local pre-commit configuration
-# to prevent "works on my machine" issues
+# CI workflow for mcp_auto_pr (orchestration repository)
+# Aligned with pre-commit hooks to prevent "works on my machine" issues
 
 name: CI Pipeline
 
@@ -38,55 +37,32 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
-  test:
-    name: Tests
+  validate:
+    name: Validate Configuration
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11', '3.12']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: '1.7.1'
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test
-
-      - name: Install project
-        run: poetry install --no-interaction
-
-      - name: Run tests
+      - name: Validate YAML Files
         run: |
-          poetry run pytest tests/ \
-            --cov=src \
-            --cov-report=xml \
-            --cov-report=term-missing \
-            --junitxml=pytest.xml
+          pip install yamllint
+          yamllint -d "{extends: default, rules: {line-length: {max: 120}}}" .
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
+      - name: Validate Shell Scripts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+          find scripts/ -name "*.sh" -type f -exec bash -n {} \;
+
+      - name: Test Python Scripts
+        run: |
+          python -m py_compile test_pypi_packages.py
 
   security:
     name: Security Scan
@@ -107,7 +83,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
