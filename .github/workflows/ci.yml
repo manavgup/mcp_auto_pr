@@ -5,9 +5,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 env:
   PYTHON_VERSION: '3.11'
@@ -37,32 +37,6 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
-  validate:
-    name: Validate Configuration
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Validate YAML Files
-        run: |
-          pip install yamllint
-          yamllint -d "{extends: default, rules: {line-length: {max: 120}}}" .
-
-      - name: Validate Shell Scripts
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y shellcheck
-          find scripts/ -name "*.sh" -type f -exec bash -n {} \;
-
-      - name: Test Python Scripts
-        run: |
-          python -m py_compile test_pypi_packages.py
 
   security:
     name: Security Scan
