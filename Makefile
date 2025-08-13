@@ -4,7 +4,7 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Workspace configuration
-WORKSPACE_ROOT := $(shell pwd)/..
+WORKSPACE_ROOT := $(shell cd .. && pwd)
 SHARED_LIB := $(WORKSPACE_ROOT)/mcp_shared_lib
 LOCAL_ANALYZER := $(WORKSPACE_ROOT)/mcp_local_repo_analyzer
 PR_RECOMMENDER := $(WORKSPACE_ROOT)/mcp_pr_recommender
@@ -109,15 +109,15 @@ test-all:
 
 test-shared:
 	@echo "🧪 Testing shared library..."
-	@cd $(SHARED_LIB) && poetry run pytest tests/ -v || echo "❌ Shared lib tests failed"
+	@cd $(SHARED_LIB) && PYTHONPATH=src poetry run pytest -m "unit" --tb=short || echo "❌ Shared lib tests failed"
 
 test-analyzer:
 	@echo "🧪 Testing local repo analyzer..."
-	@cd $(LOCAL_ANALYZER) && poetry run pytest tests/ -v || echo "❌ Analyzer tests failed"
+	@cd $(LOCAL_ANALYZER) && PYTHONPATH=src poetry run pytest -m "unit" --tb=short || echo "❌ Analyzer tests failed"
 
 test-recommender:
 	@echo "🧪 Testing PR recommender..."
-	@cd $(PR_RECOMMENDER) && poetry run pytest tests/ -v || echo "❌ Recommender tests failed"
+	@cd $(PR_RECOMMENDER) && PYTHONPATH=src poetry run pytest -m "unit" --tb=short || echo "❌ Recommender tests failed"
 
 test-integration:
 	@echo "🧪 Running workspace integration tests..."

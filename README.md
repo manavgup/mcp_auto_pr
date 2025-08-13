@@ -61,8 +61,24 @@ graph TB
 ```
 ## 🚀 Quick Start (30 seconds!)
 
-### 📦 PyPI Installation (Simplest)
-Install the MCP servers directly from PyPI:
+### 🐳 Full Development Setup (Recommended)
+**This automatically clones ALL required repositories and sets up the complete workspace:**
+```bash
+git clone https://github.com/manavgup/mcp_auto_pr.git
+cd mcp_auto_pr
+./install.sh  # This clones all 4 repos and sets everything up!
+```
+
+The `install.sh` script will:
+- ✅ Clone all required repositories (mcp_shared_lib, mcp_local_repo_analyzer, mcp_pr_recommender)
+- ✅ Install all dependencies with Poetry
+- ✅ Set up pre-commit hooks
+- ✅ Create VSCode workspace configuration
+- ✅ Run validation tests
+- ✅ Configure Docker services (optional)
+
+### 📦 PyPI Installation (Standalone Usage)
+For using the MCP servers without development setup:
 ```bash
 # Install both MCP servers
 pip install mcp-local-repo-analyzer mcp-pr-recommender
@@ -70,37 +86,29 @@ pip install mcp-local-repo-analyzer mcp-pr-recommender
 # Or with uv (faster)
 uv add mcp-local-repo-analyzer mcp-pr-recommender
 
-# Test the installation
-local-git-analyzer --help
-pr-recommender --help
-
 # Set your OpenAI API key for PR recommender
 export OPENAI_API_KEY="your-api-key-here"
 
 # Test the installation
-python test_pypi_packages.py
+local-git-analyzer --help
+pr-recommender --help
 ```
 
-### 🐳 One-Command Install (Full Development Setup)
+### Alternative Setup Methods
 ```bash
-git clone https://github.com/manavgup/mcp_auto_pr.git
-cd mcp_auto_pr
-./install.sh
-```
-
-### Alternative Methods
-```bash
-# Docker setup
+# Docker-only setup (production deployment)
 ./install.sh --docker
 
-# Poetry setup
+# Poetry-only setup (no Docker)
 ./install.sh --poetry
 
-# Legacy setup
-./setup.sh && ./scripts/docker-setup.sh
+# Manual workspace setup (if install.sh doesn't work)
+make setup-auto  # Or: ./scripts/setup-workspace.sh
 ```
 
 ## 🏗️ Repository Architecture
+
+**Note:** The `install.sh` script automatically clones all these repositories for you!
 
 | Repository | Purpose | Status |
 |------------|---------|--------|
@@ -108,6 +116,20 @@ cd mcp_auto_pr
 | [mcp_local_repo_analyzer](https://github.com/manavgup/mcp_local_repo_analyzer) | Analyzes repository changes | ✅ Active |
 | [mcp_pr_recommender](https://github.com/manavgup/mcp_pr_recommender) | Generates PR recommendations | ✅ Active |
 | [mcp_auto_pr](https://github.com/manavgup/mcp_auto_pr) | Project coordination & Docker orchestration | ✅ Active |
+
+### Working with the Multi-Repository Setup
+```bash
+# After running install.sh, you'll have this structure:
+mcp_pr_workspace/
+├── mcp_auto_pr/          # You cloned this one
+├── mcp_shared_lib/       # Auto-cloned by install.sh
+├── mcp_local_repo_analyzer/  # Auto-cloned by install.sh
+├── mcp_pr_recommender/   # Auto-cloned by install.sh
+└── mcp-workspace.code-workspace  # VSCode workspace file
+
+# Open the entire workspace in VSCode
+code mcp-workspace.code-workspace
+```
 
 ## 🐳 Docker Deployment
 
