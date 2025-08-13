@@ -14,10 +14,14 @@
 make init-monorepo-structure
 
 # Or manually:
-mkdir -p src/{mcp_shared_lib,mcp_local_repo_analyzer,mcp_pr_recommender}
+mkdir -p src/{shared,mcp_local_repo_analyzer,mcp_pr_recommender}
+mkdir -p src/shared/{models,git,mcp,common,testing}
 mkdir -p tests/{unit,integration,performance,fixtures}
+mkdir -p tests/unit/{test_shared,test_local_repo_analyzer,test_pr_recommender}
+mkdir -p tests/integration/{test_mcp_servers,test_cross_package,test_end_to_end}
 mkdir -p docker/{analyzer,recommender,dev}
 mkdir -p docs/{api,architecture,guides,development}
+mkdir -p docs/architecture/decisions
 mkdir -p scripts/{setup,ci,utils}
 mkdir -p config examples .devcontainer
 ```
@@ -29,7 +33,7 @@ mkdir -p config examples .devcontainer
 
 # Or manually for each package
 rsync -av --exclude='__pycache__' --exclude='*.pyc' \
-  ../mcp_shared_lib/src/mcp_shared_lib/ src/mcp_shared_lib/
+  ../mcp_shared_lib/src/mcp_shared_lib/ src/shared/
 ```
 
 ### Task 1.3: Consolidate Tests
@@ -50,7 +54,7 @@ authors = ["Manav Gupta <manavg@gmail.com>"]
 readme = "README.md"
 license = "MIT"
 packages = [
-    {include = "mcp_shared_lib", from = "src"},
+    {include = "shared", from = "src"},
     {include = "mcp_local_repo_analyzer", from = "src"},
     {include = "mcp_pr_recommender", from = "src"}
 ]
@@ -147,7 +151,7 @@ build:
 - [ ] Created config/ and examples/ directories
 
 ### Source Code Migration
-- [ ] Moved mcp_shared_lib source code
+- [ ] Moved mcp_shared_lib source code to src/shared/
 - [ ] Moved mcp_local_repo_analyzer source code
 - [ ] Moved mcp_pr_recommender source code
 - [ ] Removed duplicated code
@@ -176,7 +180,7 @@ import sys
 sys.path.insert(0, 'src')
 
 try:
-    import mcp_shared_lib
+    import shared
     import mcp_local_repo_analyzer
     import mcp_pr_recommender
     print("✅ All packages import successfully")
@@ -220,6 +224,13 @@ poetry run python -m mcp_pr_recommender.main --help
 - Resolve version conflicts in pyproject.toml
 - Use poetry lock --no-update
 - Clear poetry cache if needed
+
+### Server Inheritance Issues
+**Issue**: MCP servers can't inherit from shared base class
+**Solution**:
+- Ensure proper import paths
+- Verify abstract method implementations
+- Check FastMCP compatibility
 
 ## Next Steps
 - Proceed to [Phase 2: CI/CD Setup](./06-phase2-cicd.md)
