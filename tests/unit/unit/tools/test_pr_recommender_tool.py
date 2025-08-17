@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from tests.utils.factories import create_file_changes
+# from tests.utils.factories import create_file_changes
 
 
 # Mock settings globally to avoid OpenAI API key requirement
