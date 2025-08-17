@@ -20,9 +20,9 @@ from mcp_local_repo_analyzer.services.git import (
     DiffAnalyzer,
     StatusTracker,
 )
-# from mcp_shared_lib.config import settings
-from mcp_shared_lib.services import GitClient
-from mcp_shared_lib.utils import logging_service
+# from shared.config import settings
+from shared.services import GitClient
+from shared.utils import logging_service
 
 logger = logging_service.get_logger(__name__)
 

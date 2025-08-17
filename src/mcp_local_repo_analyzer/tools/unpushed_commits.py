@@ -7,8 +7,8 @@ from typing import Any
 from fastmcp import Context, FastMCP
 from pydantic import Field
 
-from mcp_shared_lib.models import LocalRepository
-from mcp_shared_lib.utils import find_git_root, is_git_repository
+from shared.models import LocalRepository
+from shared.utils import find_git_root, is_git_repository
 
 
 def register_unpushed_commits_tools(mcp: FastMCP, services: dict[str, Any]) -> None:

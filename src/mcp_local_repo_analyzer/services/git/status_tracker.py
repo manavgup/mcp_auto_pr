@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, Any, Optional
 
 from mcp_local_repo_analyzer.services.git import ChangeDetector
-from mcp_shared_lib.models import BranchStatus, LocalRepository, RepositoryStatus
-from mcp_shared_lib.services import GitClient
+from shared.models import BranchStatus, LocalRepository, RepositoryStatus
+from shared.services import GitClient
 
 if TYPE_CHECKING:
     from fastmcp import Context

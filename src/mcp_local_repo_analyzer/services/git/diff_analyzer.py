@@ -5,15 +5,15 @@ from typing import Any
 
 from fastmcp.server.dependencies import get_context
 
-from mcp_shared_lib.config.git_analyzer import GitAnalyzerSettings
-from mcp_shared_lib.models import (
+from shared.config.git_analyzer import GitAnalyzerSettings
+from shared.models import (
     ChangeCategorization,
     DiffHunk,
     FileDiff,
     FileStatus,
     RiskAssessment,
 )
-from mcp_shared_lib.utils.logging_utils import get_logger
+from shared.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 

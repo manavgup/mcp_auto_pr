@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from mcp_shared_lib.models import (
+from shared.models import (
     FileStatus,
     LocalRepository,
     StagedChanges,
@@ -11,8 +11,8 @@ from mcp_shared_lib.models import (
     UnpushedCommit,
     WorkingDirectoryChanges,
 )
-from mcp_shared_lib.services import GitClient
-from mcp_shared_lib.utils import logging_service
+from shared.services import GitClient
+from shared.utils import logging_service
 
 if TYPE_CHECKING:
     from fastmcp import Context

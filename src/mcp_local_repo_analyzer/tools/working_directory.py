@@ -6,14 +6,14 @@ from typing import Any
 from fastmcp import Context, FastMCP
 from pydantic import Field
 
-from mcp_shared_lib.models import (
+from shared.models import (
     BranchStatus,
     FileStatus,
     LocalRepository,
     StagedChanges,
     WorkingDirectoryChanges,
 )
-from mcp_shared_lib.utils import find_git_root, is_git_repository
+from shared.utils import find_git_root, is_git_repository
 
 
 def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> None:

@@ -3,7 +3,7 @@ import json
 import logging
 
 import openai
-from mcp_shared_lib.models import FileStatus, OutstandingChangesAnalysis
+from shared.models import FileStatus, OutstandingChangesAnalysis
 
 from mcp_pr_recommender.config import settings
 from mcp_pr_recommender.models.pr.recommendations import ChangeGroup, PRRecommendation

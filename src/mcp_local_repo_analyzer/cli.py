@@ -6,7 +6,7 @@ import logging
 import sys
 
 from mcp_local_repo_analyzer.main import main as run_main
-from mcp_shared_lib.utils import logging_service
+from shared.utils import logging_service
 
 logger = logging_service.get_logger(__name__)
 

@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastmcp import FastMCP
-from mcp_shared_lib.utils import logging_service
+from shared.utils import logging_service
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 

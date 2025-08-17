@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from mcp_shared_lib.models import (
+from shared.models import (
     ChangeCategorization,
     FileStatus,
     OutstandingChangesAnalysis,

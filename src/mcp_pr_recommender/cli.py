@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 
-from mcp_shared_lib.utils import logging_service
+from shared.utils import logging_service
 
 from mcp_pr_recommender.main import main as run_main
 
