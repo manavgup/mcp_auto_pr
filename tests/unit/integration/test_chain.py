@@ -62,12 +62,8 @@ async def test_repo_analyzer():
                     content_text = result.content[0].text if result.content else "{}"
                     analysis_data = json.loads(content_text)
 
-                    print(
-                        f"📈 Found {analysis_data.get('total_outstanding_files', 0)} outstanding files"
-                    )
-                    print(
-                        f"⚠️  Risk level: {analysis_data.get('risk_assessment', {}).get('risk_level', 'unknown')}"
-                    )
+                    print(f"📈 Found {analysis_data.get('total_outstanding_files', 0)} outstanding files")
+                    print(f"⚠️  Risk level: {analysis_data.get('risk_assessment', {}).get('risk_level', 'unknown')}")
 
                     return analysis_data
 
@@ -156,9 +152,7 @@ async def test_pr_recommender(analysis_data):
                         print(f"      📁 Files: {len(files)}")
                         print(f"      📏 Priority: {priority}")
                         if files:
-                            print(
-                                f"      📝 Files: {', '.join(files[:3])}{'...' if len(files) > 3 else ''}"
-                            )
+                            print(f"      📝 Files: {', '.join(files[:3])}{'...' if len(files) > 3 else ''}")
 
                     return pr_data
 

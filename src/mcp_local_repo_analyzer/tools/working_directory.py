@@ -6,13 +6,10 @@ from typing import Any
 from fastmcp import Context, FastMCP
 from pydantic import Field
 
-from shared.models import (
-    BranchStatus,
-    FileStatus,
-    LocalRepository,
-    StagedChanges,
-    WorkingDirectoryChanges,
-)
+from mcp_local_repo_analyzer.models.analysis_repository import BranchStatus
+from mcp_local_repo_analyzer.models.changes import StagedChanges, WorkingDirectoryChanges
+from mcp_local_repo_analyzer.models.files import FileStatus
+from mcp_local_repo_analyzer.models.repository import LocalRepository
 from shared.utils import find_git_root, is_git_repository
 
 
@@ -23,26 +20,22 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
     def get_services() -> dict[str, Any]:
         return services
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def analyze_working_directory(
         ctx: Context,
         repository_path: str = Field(
             default=".",
             description="Path to git repository (default: current directory)",
         ),
-        include_diffs: bool = Field(
-            True, description="Include diff content in analysis"
-        ),
-        max_diff_lines: int = Field(
-            100, ge=10, le=1000, description="Maximum lines per diff to include"
-        ),
+        include_diffs: bool = Field(True, description="Include diff content in analysis"),
+        max_diff_lines: int = Field(100, ge=10, le=1000, description="Maximum lines per diff to include"),
     ) -> dict[str, Any]:
         """Analyze uncommitted changes in working directory."""
         import time
         from pathlib import Path
 
-        from mcp_shared_lib.models.analysis.repository import RepositoryStatus
-        from mcp_shared_lib.models.analysis.results import OutstandingChangesAnalysis
+        from mcp_local_repo_analyzer.models.analysis_repository import RepositoryStatus
+        from mcp_local_repo_analyzer.models.results import OutstandingChangesAnalysis
 
         start_time = time.time()
         await ctx.info(f"Starting working directory analysis for: {repository_path}")
@@ -67,6 +60,10 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
                 name=repo_path.name,
                 current_branch="main",  # Will be updated by git client
                 head_commit="unknown",  # Will be updated by git client
+                remote_url=None,
+                is_dirty=False,
+                is_bare=False,
+                upstream_branch=None,
             )
 
             await ctx.report_progress(1, 4)
@@ -74,9 +71,7 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
 
             # Detect working directory changes - returns WorkingDirectoryChanges model
             current_services = get_services()
-            changes = await current_services[
-                "change_detector"
-            ].detect_working_directory_changes(repo, ctx)
+            changes = await current_services["change_detector"].detect_working_directory_changes(repo, ctx)
 
             await ctx.report_progress(2, 4)
             await ctx.info(f"Found {changes.total_files} changed files")
@@ -85,26 +80,30 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
             working_dir_status = changes
 
             # Categorize changes
-            categorization = current_services["diff_analyzer"].categorize_changes(
-                changes.all_files
-            )
+            categorization = current_services["diff_analyzer"].categorize_changes(changes.all_files)
 
             # Assess risk
-            risk_assessment = current_services["diff_analyzer"].assess_risk(
-                changes.all_files
-            )
+            risk_assessment = current_services["diff_analyzer"].assess_risk(changes.all_files)
 
             # Create RepositoryStatus model
             repository_status = RepositoryStatus(
                 repository=repo,
                 working_directory=working_dir_status,
                 staged_changes=StagedChanges(staged_files=[]),
-                branch_status=BranchStatus(current_branch=repo.current_branch),
+                branch_status=BranchStatus(
+                    current_branch=repo.current_branch,
+                    upstream_branch=None,
+                    ahead_by=0,
+                    behind_by=0,
+                    is_up_to_date=True,
+                    needs_push=False,
+                    needs_pull=False,
+                ),
             )
 
             # Create OutstandingChangesAnalysis model
             analysis = OutstandingChangesAnalysis(
-                repository_path=str(repo_path),
+                repository_path=repo_path,
                 total_outstanding_files=changes.total_files,
                 categories=categorization,
                 risk_assessment=risk_assessment,
@@ -122,9 +121,7 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
 
             # Add diffs if requested
             if include_diffs and changes.has_changes:
-                await ctx.debug(
-                    f"Generating diffs for {min(10, len(changes.all_files))} files"
-                )
+                await ctx.debug(f"Generating diffs for {min(10, len(changes.all_files))} files")
                 diffs = await _get_file_diffs(
                     current_services,
                     repo_path,
@@ -136,32 +133,22 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
 
             await ctx.report_progress(4, 4)
             duration = time.time() - start_time
-            await ctx.info(
-                f"Working directory analysis completed in {duration:.2f} seconds"
-            )
+            await ctx.info(f"Working directory analysis completed in {duration:.2f} seconds")
 
-            return result  # type: ignore[no-any-return]
+            return result
 
         except Exception as e:
             duration = time.time() - start_time
-            await ctx.error(
-                f"Working directory analysis failed after {duration:.2f} seconds: {str(e)}"
-            )
+            await ctx.error(f"Working directory analysis failed after {duration:.2f} seconds: {str(e)}")
             return {"error": f"Failed to analyze working directory: {str(e)}"}
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def get_file_diff(
         ctx: Context,
-        file_path: str = Field(
-            ..., description="Path to specific file relative to repository root"
-        ),
+        file_path: str = Field(..., description="Path to specific file relative to repository root"),
         repository_path: str = Field(default=".", description="Path to git repository"),
-        staged: bool = Field(
-            False, description="Get staged diff instead of working tree diff"
-        ),
-        max_lines: int = Field(
-            200, ge=10, le=2000, description="Maximum lines to include in diff"
-        ),
+        staged: bool = Field(False, description="Get staged diff instead of working tree diff"),
+        max_lines: int = Field(200, ge=10, le=2000, description="Maximum lines to include in diff"),
     ) -> dict[str, Any]:
         """Get detailed diff for a specific file.
 
@@ -247,9 +234,7 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
             file_diffs = current_services["diff_analyzer"].parse_diff(diff_content)
 
             if not file_diffs:
-                await ctx.warning(
-                    f"Failed to parse diff for {file_path}, returning raw content"
-                )
+                await ctx.warning(f"Failed to parse diff for {file_path}, returning raw content")
                 return {
                     "file_path": file_path,
                     "has_changes": False,
@@ -262,18 +247,12 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
             if len(diff_content.split("\n")) > max_lines:
                 lines = diff_content.split("\n")
                 truncated_diff = "\n".join(lines[:max_lines])
-                truncated_diff += (
-                    f"\n... (truncated, {len(lines) - max_lines} more lines)"
-                )
-                await ctx.debug(
-                    f"Truncated diff from {len(lines)} to {max_lines} lines"
-                )
+                truncated_diff += f"\n... (truncated, {len(lines) - max_lines} more lines)"
+                await ctx.debug(f"Truncated diff from {len(lines)} to {max_lines} lines")
             else:
                 truncated_diff = diff_content
 
-            await ctx.info(
-                f"Successfully generated diff for {file_path} ({file_diff.total_changes} total changes)"
-            )
+            await ctx.info(f"Successfully generated diff for {file_path} ({file_diff.total_changes} total changes)")
 
             return {
                 "file_path": file_diff.file_path,
@@ -294,7 +273,7 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
             await ctx.error(f"Failed to get diff for {file_path}: {str(e)}")
             return {"error": f"Failed to get diff for {file_path}: {str(e)}"}
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def get_untracked_files(
         ctx: Context,
         repository_path: str = Field(default=".", description="Path to git repository"),
@@ -353,11 +332,13 @@ def register_working_directory_tools(mcp: FastMCP, services: dict[str, Any]) -> 
                 name=repo_path.name,
                 current_branch="main",
                 head_commit="unknown",
+                remote_url=None,
+                is_dirty=False,
+                is_bare=False,
+                upstream_branch=None,
             )
 
-            await ctx.debug(
-                "Detecting working directory changes to find untracked files"
-            )
+            await ctx.debug("Detecting working directory changes to find untracked files")
             current_services = get_services()
             changes: WorkingDirectoryChanges = await current_services[
                 "change_detector"

@@ -1,15 +1,14 @@
 """PR recommendation generation tool - now using SemanticAnalyzer directly with enhanced file handling."""
-import logging
+
+from pathlib import Path
 from typing import Any
 
-from shared.models import (
-    ChangeCategorization,
-    FileStatus,
-    OutstandingChangesAnalysis,
-    RiskAssessment,
-)
-
+from mcp_local_repo_analyzer.models.categorization import ChangeCategorization
+from mcp_local_repo_analyzer.models.files import FileStatus
+from mcp_local_repo_analyzer.models.results import OutstandingChangesAnalysis
+from mcp_local_repo_analyzer.models.risk import RiskAssessment
 from mcp_pr_recommender.services.semantic_analyzer import SemanticAnalyzer
+from shared.utils.logging import get_logger
 
 
 class PRRecommenderTool:
@@ -17,8 +16,9 @@ class PRRecommenderTool:
 
     def __init__(self) -> None:
         """Initialize PR recommender tool with semantic analyzer."""
+        super().__init__()
         self.semantic_analyzer = SemanticAnalyzer()
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
 
     async def generate_recommendations(
         self,
@@ -36,9 +36,7 @@ class PRRecommenderTool:
         Returns:
             Dict containing PR recommendations and metadata
         """
-        self.logger.info(
-            "Generating PR recommendations using LLM-based semantic analysis"
-        )
+        self.logger.info("Generating PR recommendations using LLM-based semantic analysis")
 
         try:
             # Handle MCP response format - extract structuredContent if present
@@ -46,26 +44,17 @@ class PRRecommenderTool:
             if "structuredContent" in analysis_data:
                 self.logger.info("Extracting data from MCP structuredContent wrapper")
                 actual_data = analysis_data["structuredContent"]
-            elif (
-                "content" in analysis_data and "repository_status" not in analysis_data
-            ):
-                self.logger.warning(
-                    "Received content wrapper without structuredContent"
-                )
+            elif "content" in analysis_data and "repository_status" not in analysis_data:
+                self.logger.warning("Received content wrapper without structuredContent")
                 # Try to parse JSON from content if needed
-                if (
-                    isinstance(analysis_data["content"], list)
-                    and len(analysis_data["content"]) > 0
-                ):
+                if isinstance(analysis_data["content"], list) and len(analysis_data["content"]) > 0:
                     content_item = analysis_data["content"][0]
                     if content_item.get("type") == "text":
                         import json
 
                         try:
                             actual_data = json.loads(content_item["text"])
-                            self.logger.info(
-                                "Successfully parsed JSON from content text"
-                            )
+                            self.logger.info("Successfully parsed JSON from content text")
                         except json.JSONDecodeError:
                             self.logger.error("Failed to parse JSON from content text")
 
@@ -87,9 +76,7 @@ class PRRecommenderTool:
                     total_lines_changed += f.total_changes
 
             self.logger.info(f"File breakdown: {file_type_counts}")
-            self.logger.info(
-                f"Files with actual changes: {files_with_changes}/{len(all_files)}"
-            )
+            self.logger.info(f"Files with actual changes: {files_with_changes}/{len(all_files)}")
             self.logger.info(f"Total lines changed: {total_lines_changed:,}")
 
             if not all_files:
@@ -101,27 +88,17 @@ class PRRecommenderTool:
                 }
 
             # Create OutstandingChangesAnalysis object with proper data
-            analysis: OutstandingChangesAnalysis = self._create_analysis_object(
-                actual_data, all_files
-            )
+            analysis: OutstandingChangesAnalysis = self._create_analysis_object(actual_data, all_files)
 
             # Generate recommendations using semantic analyzer directly
-            pr_recommendations = await self.semantic_analyzer.analyze_and_generate_prs(
-                all_files, analysis
-            )
+            pr_recommendations = await self.semantic_analyzer.analyze_and_generate_prs(all_files, analysis)
 
             self.logger.info(f"Generated {len(pr_recommendations)} PR recommendations")
 
             # Calculate summary statistics
             total_files_in_prs = sum(pr.files_count for pr in pr_recommendations)
-            average_pr_size = (
-                total_files_in_prs / len(pr_recommendations)
-                if pr_recommendations
-                else 0
-            )
-            total_changes_in_prs = sum(
-                pr.total_lines_changed for pr in pr_recommendations
-            )
+            average_pr_size = total_files_in_prs / len(pr_recommendations) if pr_recommendations else 0
+            total_changes_in_prs = sum(pr.total_lines_changed for pr in pr_recommendations)
 
             # Enhanced validation - check if untracked files are included
             untracked_files = [f for f in all_files if f.change_type == "untracked"]
@@ -136,9 +113,7 @@ class PRRecommenderTool:
                             untracked_in_prs += 1
                             break
 
-            self.logger.info(
-                f"Untracked files: {untracked_count} total, {untracked_in_prs} included in PRs"
-            )
+            self.logger.info(f"Untracked files: {untracked_count} total, {untracked_in_prs} included in PRs")
 
             # Format response
             return {
@@ -173,9 +148,9 @@ class PRRecommenderTool:
                 "summary": f"Generated {len(pr_recommendations)} atomic PRs from {len(all_files)} changed files using LLM analysis",
                 "metadata": {
                     "repository_path": str(analysis.repository_path),
-                    "analysis_timestamp": analysis.analysis_timestamp.isoformat()
-                    if hasattr(analysis, "analysis_timestamp")
-                    else None,
+                    "analysis_timestamp": (
+                        analysis.analysis_timestamp.isoformat() if hasattr(analysis, "analysis_timestamp") else None
+                    ),
                     "risk_level": analysis.risk_assessment.risk_level,
                     "grouping_method": "llm_semantic",
                     "llm_model_used": "gpt-4",  # or get from settings
@@ -220,9 +195,7 @@ class PRRecommenderTool:
 
         # Fallback: Use comprehensive analysis if available (from enhanced test)
         elif "all_files" in analysis_data:
-            self.logger.info(
-                f"Using comprehensive file analysis with {len(analysis_data['all_files'])} files"
-            )
+            self.logger.info(f"Using comprehensive file analysis with {len(analysis_data['all_files'])} files")
             for file_data in analysis_data["all_files"]:
                 file_status = self._create_file_status(file_data)
                 all_files.append(file_status)
@@ -281,12 +254,13 @@ class PRRecommenderTool:
 
         # Create the analysis object
         analysis = OutstandingChangesAnalysis(
-            repository_path=analysis_data.get("repository_path", "."),
-            analysis_timestamp=datetime.now(),  # ADD THIS LINE
+            repository_path=Path(analysis_data.get("repository_path", ".")),
+            analysis_timestamp=datetime.now(),
             total_outstanding_files=len(all_files),
             categories=categories,
             risk_assessment=risk_assessment,
             summary=analysis_data.get("summary", "Git repository analysis"),
+            repository_status=None,  # Add missing required field
             recommendations=[],  # Will be populated later
         )
 

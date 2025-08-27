@@ -1,8 +1,11 @@
-"""Package initializer for local_git_analyzer.
+"""Local repository analyzer package."""
 
-Copyright 2025
-SPDX-License-Identifier: Apache-2.0
-Author: Manav Gupta <manavg@gmail.com>
+from . import config, models, server, services, tools
 
-This package contains modules for local git analysis.
-"""
+__all__ = [
+    "models",
+    "services",
+    "tools",
+    "config",
+    "server",
+]

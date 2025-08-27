@@ -1,0 +1,176 @@
+{
+    "folders": [
+        {
+            "name": "🚀 MCP Auto PR Monorepo",
+            "path": "."
+        }
+    ],
+    "settings": {
+        // Python interpreter and paths
+        "python.defaultInterpreterPath": "./.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.extraPaths": [
+            "./src"
+        ],
+        "cursorpyright.analysis.extraPaths": [
+            "./src"
+        ],
+        "python.analysis.autoSearchPaths": true,
+        "python.analysis.autoImportCompletions": true,
+
+        // Testing configuration
+        "python.testing.pytestEnabled": true,
+        "python.testing.autoTestDiscoverOnSaveEnabled": false,
+        "python.testing.cwd": ".",
+        "python.testing.pytestArgs": [
+            "tests/unit/",
+            "-m", "unit",
+            "--tb=short"
+        ],
+
+        // Formatting and linting
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.ruffEnabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.linting.pylintEnabled": false,
+
+        // Editor settings
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+        "editor.rulers": [88],
+
+        // File associations
+        "files.associations": {
+            "*.yml": "yaml",
+            "*.yaml": "yaml",
+            "pytest.ini": "ini",
+            ".coveragerc": "ini",
+            "Makefile": "makefile",
+            "*.toml": "toml"
+        },
+
+        // Git settings
+        "git.detectSubmodules": false,
+        "git.ignoreLimitWarning": true,
+
+        // Terminal settings
+        "terminal.integrated.cwd": ".",
+        "terminal.integrated.env.osx": {
+            "PYTHONPATH": "${workspaceFolder}/src"
+        },
+        "terminal.integrated.env.linux": {
+            "PYTHONPATH": "${workspaceFolder}/src"
+        },
+
+        // Makefile support
+        "makefile.configureOnOpen": false,
+
+        // Hide unnecessary directories in explorer
+        "files.exclude": {
+            "**/__pycache__": true,
+            "**/*.pyc": true,
+            ".pytest_cache": true,
+            ".mypy_cache": true,
+            ".ruff_cache": true,
+            "htmlcov": true,
+            "*.egg-info": true,
+            ".coverage": true
+        },
+        "cursorpyright.analysis.autoImportCompletions": true,
+        "cursorpyright.analysis.autoSearchPaths": true
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.black-formatter",
+            "ms-python.isort",
+            "charliermarsh.ruff",
+            "ms-python.mypy-type-checker",
+            "github.vscode-github-actions",
+            "redhat.vscode-yaml",
+            "ms-vscode.makefile-tools",
+            "tamasfe.even-better-toml"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Run Unit Tests",
+                "type": "shell",
+                "command": "make",
+                "args": ["test-unit"],
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Run All Tests",
+                "type": "shell",
+                "command": "make",
+                "args": ["test-all"],
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Lint Code",
+                "type": "shell",
+                "command": "make",
+                "args": ["lint"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Format Code",
+                "type": "shell",
+                "command": "make",
+                "args": ["format"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Quality Check",
+                "type": "shell",
+                "command": "make",
+                "args": ["quality-check"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            }
+        ]
+    }
+}

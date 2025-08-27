@@ -2,8 +2,8 @@ services:
   # Local Repository Analyzer
   mcp-repo-analyzer:
     build:
-      context: ..  # Build from workspace root to include shared lib
-      dockerfile: mcp_auto_pr/docker/analyzer/Dockerfile
+      context: .  # Build from current directory
+      dockerfile: docker/analyzer/Dockerfile
     ports:
       - "9070:9070"
     environment:
@@ -24,8 +24,8 @@ services:
   # PR Recommender
   mcp-pr-recommender:
     build:
-      context: ..  # Build from workspace root to include shared lib
-      dockerfile: mcp_auto_pr/docker/recommender/Dockerfile
+      context: .  # Build from current directory
+      dockerfile: docker/recommender/Dockerfile
     ports:
       - "9071:9071"
     environment:

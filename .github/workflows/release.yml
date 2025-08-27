@@ -1,0 +1,183 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: |
+        poetry install --with test,dev
+
+    - name: Run tests
+      run: |
+        poetry run pytest tests/ -m "unit and not slow" --tb=short
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Manual version release
+      if: ${{ github.event.inputs.version }}
+      run: |
+        echo "Creating manual release for version ${{ github.event.inputs.version }}"
+        poetry version ${{ github.event.inputs.version }}
+
+        # Create release commit
+        git add pyproject.toml
+        git commit -m "chore: release v${{ github.event.inputs.version }}"
+
+        # Create and push tag
+        git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+        git push origin main --tags
+
+        echo "released=true" >> $GITHUB_OUTPUT
+        echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+      id: manual_release
+
+    - name: Automatic semantic release
+      if: ${{ !github.event.inputs.version }}
+      id: semantic_release
+      run: |
+        # Check if there are any releasable changes since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [ -z "$LAST_TAG" ]; then
+          echo "No previous tags found, creating initial release"
+          NEW_VERSION="0.1.0"
+        else
+          # Simple semantic versioning based on commit messages
+          COMMITS_SINCE_TAG=$(git log ${LAST_TAG}..HEAD --oneline)
+
+          if echo "$COMMITS_SINCE_TAG" | grep -q "feat\|feature"; then
+            # Minor version bump for new features
+            NEW_VERSION=$(echo "$LAST_TAG" | sed 's/v//' | awk -F. '{print $1"."($2+1)".0"}')
+          elif echo "$COMMITS_SINCE_TAG" | grep -q "fix\|bug"; then
+            # Patch version bump for bug fixes
+            NEW_VERSION=$(echo "$LAST_TAG" | sed 's/v//' | awk -F. '{print $1"."$2"."($3+1)}')
+          else
+            echo "No releasable changes found"
+            echo "released=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+
+        if [ -n "$NEW_VERSION" ]; then
+          echo "Creating automatic release for version $NEW_VERSION"
+          poetry version $NEW_VERSION
+
+          # Create release commit
+          git add pyproject.toml
+          git commit -m "chore: release v$NEW_VERSION" || echo "No changes to commit"
+
+          # Create and push tag
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin main --tags
+
+          echo "released=true" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build packages
+      if: steps.manual_release.outputs.released == 'true' || steps.semantic_release.outputs.released == 'true'
+      run: |
+        poetry build
+
+    - name: Generate changelog
+      if: steps.manual_release.outputs.released == 'true' || steps.semantic_release.outputs.released == 'true'
+      id: changelog
+      run: |
+        VERSION="${{ steps.manual_release.outputs.version || steps.semantic_release.outputs.version }}"
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+
+        if [ -n "$LAST_TAG" ]; then
+          CHANGELOG=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s" --reverse)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s" --reverse)
+        fi
+
+        # Write changelog to file
+        cat > release_notes.md << EOF
+        ## Changes in v$VERSION
+
+        $CHANGELOG
+
+        ## Docker Images
+
+        - \`ghcr.io/${{ github.repository }}/mcp-local-repo-analyzer:v$VERSION\`
+        - \`ghcr.io/${{ github.repository }}/mcp-pr-recommender:v$VERSION\`
+
+        ## Installation
+
+        \`\`\`bash
+        # Via pip
+        pip install mcp-auto-pr==$VERSION
+
+        # Via Docker
+        docker pull ghcr.io/${{ github.repository }}/mcp-local-repo-analyzer:v$VERSION
+        docker pull ghcr.io/${{ github.repository }}/mcp-pr-recommender:v$VERSION
+        \`\`\`
+        EOF
+
+    - name: Create GitHub Release
+      if: steps.manual_release.outputs.released == 'true' || steps.semantic_release.outputs.released == 'true'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.manual_release.outputs.version || steps.semantic_release.outputs.version }}
+        release_name: Release v${{ steps.manual_release.outputs.version || steps.semantic_release.outputs.version }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+
+    - name: Upload packages to release
+      if: steps.manual_release.outputs.released == 'true' || steps.semantic_release.outputs.released == 'true'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/
+        asset_name: mcp-auto-pr-packages
+        asset_content_type: application/zip

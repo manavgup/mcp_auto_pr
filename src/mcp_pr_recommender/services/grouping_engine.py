@@ -1,17 +1,15 @@
 """Simple grouping engine that orchestrates the PR recommendation process."""
-import logging
+
 from pathlib import Path
+from typing import Literal
 
-from shared.models import FileStatus, OutstandingChangesAnalysis
-
+from mcp_local_repo_analyzer.models.files import FileStatus
+from mcp_local_repo_analyzer.models.results import OutstandingChangesAnalysis
 from mcp_pr_recommender.config import settings
-from mcp_pr_recommender.models.pr.recommendations import (
-    ChangeGroup,
-    PRRecommendation,
-    PRStrategy,
-)
+from mcp_pr_recommender.models.recommendations import ChangeGroup, PRRecommendation, PRStrategy
 from mcp_pr_recommender.services.atomicity_validator import AtomicityValidator
 from mcp_pr_recommender.services.semantic_analyzer import SemanticAnalyzer
+from shared.utils.logging import get_logger
 
 
 class GroupingEngine:
@@ -21,15 +19,13 @@ class GroupingEngine:
         """Initialize grouping engine with analyzer and validator."""
         self.semantic_analyzer = SemanticAnalyzer()
         self.atomicity_validator = AtomicityValidator()
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
 
     async def generate_pr_recommendations(
         self, analysis: OutstandingChangesAnalysis, strategy_name: str = "semantic"
     ) -> PRStrategy:
         """Generate PR recommendations from git analysis."""
-        self.logger.info(
-            f"Generating PR recommendations using {strategy_name} strategy"
-        )
+        self.logger.info(f"Generating PR recommendations using {strategy_name} strategy")
         self.logger.info(f"Input: {len(analysis.all_changed_files)} files to analyze")
 
         # Step 1: Simple logical grouping
@@ -37,25 +33,15 @@ class GroupingEngine:
         self.logger.info(f"Initial grouping: {len(initial_groups)} groups")
 
         # Step 2: Skip semantic analysis if groups are already good
-        if (
-            len(initial_groups) <= 5
-            and settings().enable_llm_analysis
-            and strategy_name == "semantic"
-        ):
+        if len(initial_groups) <= 5 and settings().enable_llm_analysis and strategy_name == "semantic":
             # Instead of refine_groups, use the main analysis method
             file_statuses = [file for group in initial_groups for file in group.files]
-            refined_recommendations = (
-                await self.semantic_analyzer.analyze_and_generate_prs(
-                    file_statuses, analysis
-                )
-            )
+            refined_recommendations = await self.semantic_analyzer.analyze_and_generate_prs(file_statuses, analysis)
             # Convert back to groups for consistency
             refined_groups = [
                 ChangeGroup(
                     id=rec.id,
-                    files=[
-                        f for f in analysis.all_changed_files if f.path in rec.files
-                    ],
+                    files=[f for f in analysis.all_changed_files if f.path in rec.files],
                     category=rec.labels[0] if rec.labels else "other",
                     reasoning=rec.reasoning,
                     confidence=0.8,
@@ -98,9 +84,7 @@ class GroupingEngine:
         excluded_count = len(files) - len(clean_files)
 
         if excluded_count > 0:
-            self.logger.info(
-                f"Excluded {excluded_count} cache/history files from PR grouping"
-            )
+            self.logger.info(f"Excluded {excluded_count} cache/history files from PR grouping")
 
         if not clean_files:
             self.logger.warning("No files left after filtering")
@@ -123,11 +107,7 @@ class GroupingEngine:
             )
 
         # Group 2: Project configuration (second priority)
-        config_files = [
-            f
-            for f in clean_files
-            if self._is_project_config(f.path) and f not in source_files
-        ]
+        config_files = [f for f in clean_files if self._is_project_config(f.path) and f not in source_files]
         if config_files:
             groups.append(
                 ChangeGroup(
@@ -141,11 +121,7 @@ class GroupingEngine:
             )
 
         # Group 3: Tests (third priority)
-        test_files = [
-            f
-            for f in clean_files
-            if self._is_test_file(f.path) and f not in source_files + config_files
-        ]
+        test_files = [f for f in clean_files if self._is_test_file(f.path) and f not in source_files + config_files]
         if test_files:
             groups.append(
                 ChangeGroup(
@@ -162,8 +138,7 @@ class GroupingEngine:
         doc_files = [
             f
             for f in clean_files
-            if self._is_documentation(f.path)
-            and f not in source_files + config_files + test_files
+            if self._is_documentation(f.path) and f not in source_files + config_files + test_files
         ]
         if doc_files:
             groups.append(
@@ -192,9 +167,7 @@ class GroupingEngine:
                 )
             )
 
-        self.logger.info(
-            f"Created {len(groups)} logical groups: {[g.id for g in groups]}"
-        )
+        self.logger.info(f"Created {len(groups)} logical groups: {[g.id for g in groups]}")
 
         # If we still have too many files in one group, split it
         final_groups = []
@@ -308,9 +281,7 @@ class GroupingEngine:
         # Documentation directories
         doc_dirs = ["docs/", "doc/", "documentation/"]
 
-        return any(path.endswith(ext) for ext in doc_extensions) or any(
-            doc_dir in path_lower for doc_dir in doc_dirs
-        )
+        return any(path.endswith(ext) for ext in doc_extensions) or any(doc_dir in path_lower for doc_dir in doc_dirs)
 
     def _split_large_group_simple(self, group: ChangeGroup) -> list[ChangeGroup]:
         """Split a large group by directory."""
@@ -340,9 +311,7 @@ class GroupingEngine:
                 )
             )
 
-        self.logger.info(
-            f"Split large group {group.id} into {len(split_groups)} directory-based groups"
-        )
+        self.logger.info(f"Split large group {group.id} into {len(split_groups)} directory-based groups")
         return split_groups
 
     def _validate_groups(self, groups: list[ChangeGroup]) -> list[ChangeGroup]:
@@ -352,9 +321,7 @@ class GroupingEngine:
         for group in groups:
             # Only split if group is unreasonably large (>20 files)
             if len(group.files) > 20:
-                self.logger.warning(
-                    f"Group {group.id} has {len(group.files)} files - splitting"
-                )
+                self.logger.warning(f"Group {group.id} has {len(group.files)} files - splitting")
                 split_groups = self._split_large_group_simple(group)
                 validated_groups.extend(split_groups)
             else:
@@ -362,9 +329,7 @@ class GroupingEngine:
 
         return validated_groups
 
-    def _groups_to_prs(
-        self, groups: list[ChangeGroup], analysis: OutstandingChangesAnalysis
-    ) -> list[PRRecommendation]:
+    def _groups_to_prs(self, groups: list[ChangeGroup], analysis: OutstandingChangesAnalysis) -> list[PRRecommendation]:
         """Convert groups to PR recommendations with better titles and descriptions."""
         pr_recommendations = []
 
@@ -435,9 +400,7 @@ class GroupingEngine:
             else:
                 return f"{prefix} update {group.category} files ({file_count} files)"
 
-    def _generate_smart_description(
-        self, group: ChangeGroup, _analysis: OutstandingChangesAnalysis
-    ) -> str:
+    def _generate_smart_description(self, group: ChangeGroup, _analysis: OutstandingChangesAnalysis) -> str:
         """Generate smart descriptions with real statistics."""
         # Calculate real statistics
         total_additions = sum(f.lines_added for f in group.files)
@@ -460,18 +423,12 @@ class GroupingEngine:
             lines.extend([f"### Files with changes ({len(files_with_changes)}):", ""])
 
             # Show top 10 files with most changes
-            top_files = sorted(
-                files_with_changes, key=lambda f: f.total_changes, reverse=True
-            )[:10]
+            top_files = sorted(files_with_changes, key=lambda f: f.total_changes, reverse=True)[:10]
             for file in top_files:
-                lines.append(
-                    f"- `{file.path}` (+{file.lines_added}/-{file.lines_deleted})"
-                )
+                lines.append(f"- `{file.path}` (+{file.lines_added}/-{file.lines_deleted})")
 
             if len(files_with_changes) > 10:
-                lines.append(
-                    f"- ... and {len(files_with_changes) - 10} more files with changes"
-                )
+                lines.append(f"- ... and {len(files_with_changes) - 10} more files with changes")
 
         if files_without_changes:
             lines.extend(
@@ -525,9 +482,7 @@ class GroupingEngine:
             clean_id = group.id.replace("_", "-").replace("changes", "").strip("-")
             return f"{category}/{clean_id}"
 
-    def _determine_priority(
-        self, group: ChangeGroup
-    ) -> str:  # Should return Literal types
+    def _determine_priority(self, group: ChangeGroup) -> Literal["high", "medium", "low"]:
         """Determine priority based on category and size."""
         if group.category == "feature":
             return "high"
@@ -538,14 +493,12 @@ class GroupingEngine:
 
     def _determine_risk_level(
         self, group: ChangeGroup, total_lines: int, files_count: int
-    ) -> str:  # Should return Literal types
+    ) -> Literal["low", "medium", "high"]:
         """Determine risk based on real factors."""
         # High risk: lots of changes OR core files OR config changes
         if total_lines > 1000:
             return "high"
-        if group.category == "feature" or (
-            group.category in ["config", "test"] and total_lines > 200
-        ):
+        if group.category == "feature" or (group.category in ["config", "test"] and total_lines > 200):
             return "high" if group.category == "feature" else "medium"
         elif files_count > 15:
             return "medium"

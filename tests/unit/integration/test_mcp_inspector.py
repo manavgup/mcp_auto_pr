@@ -57,9 +57,7 @@ class MCPInspectorClient:
                     line = output_queue.get(timeout=1)
 
                     # Look for proxy server port
-                    proxy_match = re.search(
-                        r"Proxy server listening on localhost:(\d+)", line
-                    )
+                    proxy_match = re.search(r"Proxy server listening on localhost:(\d+)", line)
                     if proxy_match:
                         proxy_port = proxy_match.group(1)
                         self.proxy_url = f"http://localhost:{proxy_port}"
@@ -172,23 +170,17 @@ class MCPInspectorClient:
 
             for endpoint in endpoints:
                 try:
-                    response = self.session.post(
-                        f"{self.proxy_url}{endpoint}", json=payload, timeout=10
-                    )
+                    response = self.session.post(f"{self.proxy_url}{endpoint}", json=payload, timeout=10)
 
                     if response.status_code == 200:
                         result = response.json()
-                        connection_id = (
-                            result.get("connectionId") or result.get("id") or "default"
-                        )
+                        connection_id = result.get("connectionId") or result.get("id") or "default"
                         print(f"✅ Created connection: {connection_id}")
                         return connection_id
                     elif response.status_code == 404:
                         continue  # Try next endpoint
                     else:
-                        print(
-                            f"⚠️  Endpoint {endpoint} returned {response.status_code}: {response.text}"
-                        )
+                        print(f"⚠️  Endpoint {endpoint} returned {response.status_code}: {response.text}")
 
                 except Exception as e:
                     print(f"⚠️  Failed endpoint {endpoint}: {e}")
@@ -201,9 +193,7 @@ class MCPInspectorClient:
             print(f"❌ Error creating connection: {e}")
             return None
 
-    def send_mcp_message(
-        self, connection_id: str, message: dict[str, Any]
-    ) -> dict[str, Any] | None:
+    def send_mcp_message(self, connection_id: str, message: dict[str, Any]) -> dict[str, Any] | None:
         """Send an MCP message through the proxy"""
         try:
             # Try different possible endpoints
@@ -216,18 +206,14 @@ class MCPInspectorClient:
 
             for endpoint in endpoints:
                 try:
-                    response = self.session.post(
-                        f"{self.proxy_url}{endpoint}", json=message, timeout=15
-                    )
+                    response = self.session.post(f"{self.proxy_url}{endpoint}", json=message, timeout=15)
 
                     if response.status_code == 200:
                         return response.json()
                     elif response.status_code == 404:
                         continue  # Try next endpoint
                     else:
-                        print(
-                            f"⚠️  Message endpoint {endpoint} returned {response.status_code}"
-                        )
+                        print(f"⚠️  Message endpoint {endpoint} returned {response.status_code}")
 
                 except Exception as e:
                     print(f"⚠️  Failed message endpoint {endpoint}: {e}")
@@ -287,9 +273,7 @@ def main():
         repo_conn = client.create_server_connection(repo_config)
         if not repo_conn:
             print("❌ Could not create repository analyzer connection")
-            print(
-                "💡 This may be expected - the Inspector API might not support automation"
-            )
+            print("💡 This may be expected - the Inspector API might not support automation")
             return False
 
         # If we get here, we can try to send messages

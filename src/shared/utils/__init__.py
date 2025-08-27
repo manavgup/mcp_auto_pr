@@ -1,10 +1,10 @@
 """Utility functions for MCP components."""
 
 # File utilities
-from mcp_shared_lib.utils.file_utils import get_file_extension, is_binary_file
+from .file import get_file_extension, is_binary_file
 
 # Git utilities
-from mcp_shared_lib.utils.git_utils import (
+from .git import (
     find_git_root,
     format_commit_message,
     format_file_size,
@@ -17,11 +17,7 @@ from mcp_shared_lib.utils.git_utils import (
 )
 
 # Logging utilities
-from mcp_shared_lib.utils.logging_utils import (
-    get_logger,
-    logging_service,
-    setup_logging,
-)
+from .logging import get_logger, logging_service, setup_logging
 
 __all__ = [
     # File utils

@@ -7,20 +7,18 @@ from typing import Any
 from fastmcp import Context, FastMCP
 from pydantic import Field
 
-from shared.models import LocalRepository
+from mcp_local_repo_analyzer.models.repository import LocalRepository
 from shared.utils import find_git_root, is_git_repository
 
 
 def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
     """Register staging area analysis tools."""
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def analyze_staged_changes(
         ctx: Context,
         repository_path: str = Field(default=".", description="Path to git repository"),
-        include_diffs: bool = Field(
-            True, description="Include diff content for staged files"
-        ),
+        include_diffs: bool = Field(True, description="Include diff content for staged files"),
     ) -> dict[str, Any]:
         """Analyze changes staged for commit.
 
@@ -95,6 +93,10 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                 name=repo_path.name,
                 current_branch="main",
                 head_commit="unknown",
+                remote_url=None,
+                is_dirty=False,
+                is_bare=False,
+                upstream_branch=None,
             )
 
             await ctx.report_progress(1, 4)
@@ -102,9 +104,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             # Use existing StagedChanges model
             current_services = services
-            staged_changes = await current_services[
-                "change_detector"
-            ].detect_staged_changes(repo, ctx)
+            staged_changes = await current_services["change_detector"].detect_staged_changes(repo, ctx)
 
             await ctx.report_progress(2, 4)
             await ctx.info(f"Found {staged_changes.total_staged} staged files")
@@ -133,16 +133,12 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             # Add diffs if requested
             if include_diffs and staged_changes.staged_files:
-                await ctx.debug(
-                    f"Generating diffs for {min(10, len(staged_changes.staged_files))} staged files"
-                )
+                await ctx.debug(f"Generating diffs for {min(10, len(staged_changes.staged_files))} staged files")
                 diffs = []
                 files_to_process = staged_changes.staged_files[:10]  # Limit to 10 files
 
                 for i, file_status in enumerate(files_to_process):
-                    await ctx.report_progress(
-                        2.5 + (i / len(files_to_process)) * 0.5, 4
-                    )
+                    await ctx.report_progress(2.5 + (i / len(files_to_process)) * 0.5, 4)
 
                     try:
                         if file_status.is_binary:
@@ -165,9 +161,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                         lines = diff_content.split("\n")
                         if len(lines) > 100:
                             diff_content = "\n".join(lines[:100]) + "\n... (truncated)"
-                            await ctx.debug(
-                                f"Truncated diff for {file_status.path} from {len(lines)} to 100 lines"
-                            )
+                            await ctx.debug(f"Truncated diff for {file_status.path} from {len(lines)} to 100 lines")
 
                         diffs.append(
                             {
@@ -177,9 +171,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                         )
 
                     except Exception as e:
-                        await ctx.warning(
-                            f"Failed to get diff for {file_status.path}: {str(e)}"
-                        )
+                        await ctx.warning(f"Failed to get diff for {file_status.path}: {str(e)}")
                         diffs.append(
                             {
                                 "file_path": file_status.path,
@@ -191,20 +183,16 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             await ctx.report_progress(4, 4)
             duration = time.time() - start_time
-            await ctx.info(
-                f"Staged changes analysis completed in {duration:.2f} seconds"
-            )
+            await ctx.info(f"Staged changes analysis completed in {duration:.2f} seconds")
 
             return result
 
         except Exception as e:
             duration = time.time() - start_time
-            await ctx.error(
-                f"Staged changes analysis failed after {duration:.2f} seconds: {str(e)}"
-            )
+            await ctx.error(f"Staged changes analysis failed after {duration:.2f} seconds: {str(e)}")
             return {"error": f"Failed to analyze staged changes: {str(e)}"}
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def preview_commit(
         ctx: Context,
         repository_path: str = Field(default=".", description="Path to git repository"),
@@ -279,13 +267,15 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                 name=repo_path.name,
                 current_branch="main",
                 head_commit="unknown",
+                remote_url=None,
+                is_dirty=False,
+                is_bare=False,
+                upstream_branch=None,
             )
 
             await ctx.debug("Detecting staged changes")
             current_services = services
-            staged_changes = await current_services[
-                "change_detector"
-            ].detect_staged_changes(repo, ctx)
+            staged_changes = await current_services["change_detector"].detect_staged_changes(repo, ctx)
 
             if not staged_changes.ready_to_commit:
                 await ctx.info("No changes staged for commit")
@@ -297,9 +287,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             await ctx.debug("Categorizing staged changes")
             # Categorize changes using existing analyzer
-            categories = current_services["diff_analyzer"].categorize_changes(
-                staged_changes.staged_files
-            )
+            categories = current_services["diff_analyzer"].categorize_changes(staged_changes.staged_files)
 
             await ctx.debug("Analyzing file types")
             # Get file types
@@ -330,26 +318,10 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                 },
                 "file_types": file_types,
                 "files_by_status": {
-                    "added": [
-                        f.path
-                        for f in staged_changes.staged_files
-                        if f.status_code == "A"
-                    ],
-                    "modified": [
-                        f.path
-                        for f in staged_changes.staged_files
-                        if f.status_code == "M"
-                    ],
-                    "deleted": [
-                        f.path
-                        for f in staged_changes.staged_files
-                        if f.status_code == "D"
-                    ],
-                    "renamed": [
-                        f.path
-                        for f in staged_changes.staged_files
-                        if f.status_code == "R"
-                    ],
+                    "added": [f.path for f in staged_changes.staged_files if f.status_code == "A"],
+                    "modified": [f.path for f in staged_changes.staged_files if f.status_code == "M"],
+                    "deleted": [f.path for f in staged_changes.staged_files if f.status_code == "D"],
+                    "renamed": [f.path for f in staged_changes.staged_files if f.status_code == "R"],
                 },
             }
 
@@ -357,7 +329,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
             await ctx.error(f"Failed to preview commit: {str(e)}")
             return {"error": f"Failed to preview commit: {str(e)}"}
 
-    @mcp.tool()  # type: ignore[misc]
+    @mcp.tool()
     async def validate_staged_changes(
         ctx: Context,
         repository_path: str = Field(default=".", description="Path to git repository"),
@@ -434,18 +406,18 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
                 name=repo_path.name,
                 current_branch="main",
                 head_commit="unknown",
+                remote_url=None,
+                is_dirty=False,
+                is_bare=False,
+                upstream_branch=None,
             )
 
             await ctx.debug("Detecting staged changes")
             current_services = services
-            staged_changes = await current_services[
-                "change_detector"
-            ].detect_staged_changes(repo, ctx)
+            staged_changes = await current_services["change_detector"].detect_staged_changes(repo, ctx)
 
             if not staged_changes.ready_to_commit:
-                await ctx.info(
-                    "No changes staged for commit - validation not applicable"
-                )
+                await ctx.info("No changes staged for commit - validation not applicable")
                 return {
                     "repository_path": str(repo_path),
                     "valid": False,
@@ -454,14 +426,10 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             await ctx.debug("Performing risk assessment")
             # Perform validation using existing risk assessment
-            risk_assessment = current_services["diff_analyzer"].assess_risk(
-                staged_changes.staged_files
-            )
+            risk_assessment = current_services["diff_analyzer"].assess_risk(staged_changes.staged_files)
 
             await ctx.debug("Categorizing changes for validation")
-            categories = current_services["diff_analyzer"].categorize_changes(
-                staged_changes.staged_files
-            )
+            categories = current_services["diff_analyzer"].categorize_changes(staged_changes.staged_files)
 
             warnings = []
             errors = []
@@ -474,17 +442,13 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
             # Check for large changes
             if risk_assessment.large_changes:
-                warning_msg = (
-                    f"Large changes in {len(risk_assessment.large_changes)} files"
-                )
+                warning_msg = f"Large changes in {len(risk_assessment.large_changes)} files"
                 warnings.append(warning_msg)
                 await ctx.warning(warning_msg)
 
             # Check for critical files
             if categories.has_critical_changes:
-                warning_msg = (
-                    f"Critical files changed: {len(categories.critical_files)}"
-                )
+                warning_msg = f"Critical files changed: {len(categories.critical_files)}"
                 warnings.append(warning_msg)
                 await ctx.warning(warning_msg)
 
@@ -507,15 +471,11 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
             # Generate recommendations
             recommendations = []
             if risk_assessment.large_changes:
-                recommendations.append(
-                    "Review large changes carefully before committing"
-                )
+                recommendations.append("Review large changes carefully before committing")
             if categories.has_critical_changes:
                 recommendations.append("Double-check critical file changes")
             if staged_changes.total_staged > 10:
-                recommendations.append(
-                    "Consider splitting large commits into smaller ones"
-                )
+                recommendations.append("Consider splitting large commits into smaller ones")
             if len(categories.source_code) > 0 and len(categories.tests) == 0:
                 recommendations.append("Add tests for new functionality")
 
@@ -523,9 +483,7 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
             recommendations = [r for r in recommendations if r]
 
             duration = time.time() - start_time
-            await ctx.info(
-                f"Validation completed in {duration:.2f} seconds - {'VALID' if is_valid else 'INVALID'}"
-            )
+            await ctx.info(f"Validation completed in {duration:.2f} seconds - {'VALID' if is_valid else 'INVALID'}")
 
             return {
                 "repository_path": str(repo_path),
@@ -545,7 +503,5 @@ def register_staging_area_tools(mcp: FastMCP, services: dict[str, Any]) -> None:
 
         except Exception as e:
             duration = time.time() - start_time
-            await ctx.error(
-                f"Staged changes validation failed after {duration:.2f} seconds: {str(e)}"
-            )
+            await ctx.error(f"Staged changes validation failed after {duration:.2f} seconds: {str(e)}")
             return {"error": f"Failed to validate staged changes: {str(e)}"}

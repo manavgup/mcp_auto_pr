@@ -1,17 +1,32 @@
-"""PR feasibility analysis tool."""
-import logging
+"""Tool for analyzing PR feasibility."""
+
 from pathlib import Path
 from typing import Any
 
 from mcp_pr_recommender.config import settings
+from shared.base.tool import BaseMCPTool
+from shared.utils.logging import get_logger
 
 
-class FeasibilityAnalyzerTool:
-    """Tool for analyzing PR feasibility and risks."""
+class FeasibilityAnalyzerTool(BaseMCPTool):
+    """Tool for analyzing PR feasibility."""
 
     def __init__(self) -> None:
-        """Initialize feasibility analyzer tool with logging."""
-        self.logger = logging.getLogger(__name__)
+        """Initialize feasibility analyzer tool."""
+        super().__init__()
+        self.logger = get_logger(__name__)
+
+    async def execute(self, **kwargs: Any) -> dict[str, Any]:
+        """Execute the tool's main functionality.
+
+        Args:
+            **kwargs: Keyword arguments including 'pr_recommendation' for analysis
+
+        Returns:
+            Dict containing feasibility analysis
+        """
+        pr_recommendation = kwargs.get("pr_recommendation", {})
+        return await self.analyze_feasibility(pr_recommendation)
 
     async def analyze_feasibility(
         self,
@@ -44,9 +59,7 @@ class FeasibilityAnalyzerTool:
             # Check file count
             if len(files) > settings().max_files_per_pr:
                 analysis["risk_factors"].append(f"Large number of files ({len(files)})")
-                analysis["recommendations"].append(
-                    "Consider splitting into smaller PRs"
-                )
+                analysis["recommendations"].append("Consider splitting into smaller PRs")
 
             # Check for mixed concerns
             file_analysis = self._categorize_files(files)
@@ -63,9 +76,7 @@ class FeasibilityAnalyzerTool:
             if len(analysis["risk_factors"]) > 2:
                 analysis["feasible"] = False
 
-            self.logger.info(
-                f"Feasibility analysis complete: {'feasible' if analysis['feasible'] else 'needs review'}"
-            )
+            self.logger.info(f"Feasibility analysis complete: {'feasible' if analysis['feasible'] else 'needs review'}")
 
             return analysis
 
@@ -116,16 +127,10 @@ class FeasibilityAnalyzerTool:
             "estimated_review_time_per_file": 10,  # minutes
             "complexity_factors": [
                 "File count" if len(files) > 5 else None,
-                "Multiple directories"
-                if len({Path(f).parent for f in files}) > 2
-                else None,
-                "Mixed file types"
-                if len({Path(f).suffix for f in files}) > 3
-                else None,
+                ("Multiple directories" if len({Path(f).parent for f in files}) > 2 else None),
+                ("Mixed file types" if len({Path(f).suffix for f in files}) > 3 else None),
             ],
-            "complexity_score": min(
-                10, len(files) + len({Path(f).parent for f in files})
-            ),
+            "complexity_score": min(10, len(files) + len({Path(f).parent for f in files})),
         }
 
     def _analyze_dependencies(self, files: list[str]) -> dict[str, Any]:
@@ -156,11 +161,7 @@ class FeasibilityAnalyzerTool:
         # Check for critical file patterns
         critical_patterns = ["migration", "schema", "config", "env", "docker", "deploy"]
 
-        critical_files = [
-            f
-            for f in files
-            if any(pattern in f.lower() for pattern in critical_patterns)
-        ]
+        critical_files = [f for f in files if any(pattern in f.lower() for pattern in critical_patterns)]
 
         if critical_files:
             risk_factors.append(f"Critical files present: {len(critical_files)}")
@@ -179,9 +180,7 @@ class FeasibilityAnalyzerTool:
             "recommendations": [r for r in recommendations if r],
         }
 
-    def _generate_review_checklist(
-        self, pr_recommendation: dict[str, Any]
-    ) -> list[str]:
+    def _generate_review_checklist(self, pr_recommendation: dict[str, Any]) -> list[str]:
         """Generate a review checklist based on the PR."""
         checklist = [
             "Code follows team style guidelines",

@@ -1,2 +1,1 @@
-"""MCP PR Recommender package."""
-__version__ = "0.1.0"
+"""MCP PR Recommender - AI-powered pull request recommendation system."""

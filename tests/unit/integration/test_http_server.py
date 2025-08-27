@@ -7,9 +7,7 @@ import pytest
 from fastmcp import Client
 
 
-@pytest.mark.skip(
-    reason="Requires HTTP server running on localhost:8000 - start with 'python run_http_server.py'"
-)
+@pytest.mark.skip(reason="Requires HTTP server running on localhost:8000 - start with 'python run_http_server.py'")
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_http_server():
@@ -26,9 +24,7 @@ async def test_http_server():
         assert isinstance(tools, list)
 
         # Test a simple tool
-        result = await client.call_tool(
-            "analyze_working_directory", {"repository_path": "."}
-        )
+        result = await client.call_tool("analyze_working_directory", {"repository_path": "."})
         print(f"📊 Result: {result.get('total_files_changed', 'unknown')} files changed")
         assert isinstance(result, dict | list)
 

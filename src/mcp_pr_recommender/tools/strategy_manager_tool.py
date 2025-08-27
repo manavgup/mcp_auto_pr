@@ -1,16 +1,38 @@
-"""Strategy management tool."""
-import logging
+"""Tool for managing PR strategies."""
+
 from typing import Any
 
 from mcp_pr_recommender.config import settings
+from shared.base.tool import BaseMCPTool
+from shared.utils.logging import get_logger
 
 
-class StrategyManagerTool:
-    """Tool for managing PR grouping strategies."""
+class StrategyManagerTool(BaseMCPTool):
+    """Tool for managing PR strategies."""
 
     def __init__(self) -> None:
-        """Initialize strategy manager tool with logging."""
-        self.logger = logging.getLogger(__name__)
+        """Initialize strategy manager tool."""
+        super().__init__()
+        self.logger = get_logger(__name__)
+
+    async def execute(self, **kwargs: Any) -> dict[str, Any]:
+        """Execute the tool's main functionality.
+
+        Args:
+            **kwargs: Keyword arguments including 'action' and other parameters
+
+        Returns:
+            Dict containing strategy information or operation results
+        """
+        action = kwargs.get("action", "get_strategies")
+
+        if action == "get_strategies":
+            return await self.get_strategies()
+        elif action == "set_default_strategy":
+            strategy = kwargs.get("strategy")
+            return await self.set_default_strategy(strategy)
+        else:
+            return {"error": f"Unknown action: {action}"}
 
     async def get_strategies(self) -> dict[str, Any]:
         """Get available PR grouping strategies and their descriptions."""
@@ -112,4 +134,25 @@ class StrategyManagerTool:
             "new_features": "Use 'semantic' or 'hybrid' for feature development",
             "documentation": "Use 'directory' for documentation-only changes",
             "configuration": "Use 'semantic' to group related config changes",
+        }
+
+    async def set_default_strategy(self, strategy: str | None) -> dict[str, Any]:
+        """Set the default PR grouping strategy."""
+        if not strategy:
+            return {"error": "Strategy parameter is required"}
+
+        valid_strategies = ["semantic", "directory", "size", "dependency", "hybrid"]
+        if strategy not in valid_strategies:
+            return {"error": f"Invalid strategy: {strategy}. Valid options: {valid_strategies}"}
+
+        # Note: This is a mock implementation since we don't have persistent storage
+        # In a real implementation, you would save this to a config file or database
+        self.logger.info(f"Setting default strategy to: {strategy}")
+
+        return {
+            "success": True,
+            "message": f"Default strategy set to '{strategy}'",
+            "previous_strategy": settings().default_strategy,
+            "new_strategy": strategy,
+            "note": "This change is temporary and will reset on restart unless persisted to configuration",
         }

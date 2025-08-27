@@ -1,9 +1,10 @@
 """Validates that PR groups are atomic and can stand alone."""
-import logging
+
 from pathlib import Path
 
-from mcp_pr_recommender.config import settings
-from mcp_pr_recommender.models.pr.recommendations import ChangeGroup
+from mcp_pr_recommender.config import settings as get_pr_recommender_settings
+from mcp_pr_recommender.models.recommendations import ChangeGroup
+from shared.utils.logging import get_logger
 
 
 class AtomicityValidator:
@@ -11,7 +12,7 @@ class AtomicityValidator:
 
     def __init__(self) -> None:
         """Initialize atomicity validator with logging."""
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
 
     def validate_and_split(self, groups: list[ChangeGroup]) -> list[ChangeGroup]:
         """Validate groups and split if necessary for atomicity."""
@@ -27,15 +28,13 @@ class AtomicityValidator:
                 split_groups = self._split_group(group)
                 validated_groups.extend(split_groups)
 
-        self.logger.info(
-            f"Atomicity validation: {len(groups)} -> {len(validated_groups)} groups"
-        )
+        self.logger.info(f"Atomicity validation: {len(groups)} -> {len(validated_groups)} groups")
         return validated_groups
 
     def _is_atomic(self, group: ChangeGroup) -> bool:
         """Check if a group represents an atomic change."""
         # Size constraints
-        if len(group.files) > settings().max_files_per_pr:
+        if len(group.files) > get_pr_recommender_settings().max_files_per_pr:
             self.logger.debug(f"Group {group.id} too large: {len(group.files)} files")
             return False
 
@@ -105,20 +104,14 @@ class AtomicityValidator:
 
         if has_migration and has_model:
             # This might need careful ordering
-            self.logger.warning(
-                "Migration and model changes detected - requires careful review"
-            )
+            self.logger.warning("Migration and model changes detected - requires careful review")
 
         # Schema changes with API changes
         has_schema = any("schema" in path.lower() for path in file_paths)
-        has_api = any(
-            "api" in path.lower() or "controller" in path.lower() for path in file_paths
-        )
+        has_api = any("api" in path.lower() or "controller" in path.lower() for path in file_paths)
 
         if has_schema and has_api:
-            self.logger.warning(
-                "Schema and API changes detected - check deployment order"
-            )
+            self.logger.warning("Schema and API changes detected - check deployment order")
 
         return False  # For now, return False but log warnings
 
@@ -127,7 +120,7 @@ class AtomicityValidator:
         self.logger.info(f"Splitting group {group.id} with {len(group.files)} files")
 
         # Strategy 1: Split by directory
-        if len(group.files) > settings().max_files_per_pr:
+        if len(group.files) > get_pr_recommender_settings().max_files_per_pr:
             return self._split_by_directory(group)
 
         # Strategy 2: Split by file type
@@ -139,7 +132,9 @@ class AtomicityValidator:
 
     def _split_by_directory(self, group: ChangeGroup) -> list[ChangeGroup]:
         """Split group by directory structure."""
-        dir_groups: dict[str, list[object]] = {}
+        from mcp_local_repo_analyzer.models.files import FileStatus
+
+        dir_groups: dict[str, list[FileStatus]] = {}
 
         for file in group.files:
             dir_path = str(Path(file.path).parent)
@@ -153,8 +148,7 @@ class AtomicityValidator:
                 id=f"{group.id}_split_{i}",
                 files=files,
                 category=group.category,
-                confidence=group.confidence
-                * 0.9,  # Slightly lower confidence after split
+                confidence=group.confidence * 0.9,  # Slightly lower confidence after split
                 reasoning=f"Split from {group.id}: {directory}",
                 semantic_similarity=group.semantic_similarity,
             )
@@ -164,7 +158,9 @@ class AtomicityValidator:
 
     def _split_by_concern(self, group: ChangeGroup) -> list[ChangeGroup]:
         """Split group by separating different concerns."""
-        concerns: dict[str, list[object]] = {
+        from mcp_local_repo_analyzer.models.files import FileStatus
+
+        concerns: dict[str, list[FileStatus]] = {
             "source": [],
             "test": [],
             "config": [],
@@ -206,7 +202,7 @@ class AtomicityValidator:
     def _split_by_size(self, group: ChangeGroup) -> list[ChangeGroup]:
         """Split group by size when it's too large."""
         files = group.files
-        max_files = settings().max_files_per_pr
+        max_files = get_pr_recommender_settings().max_files_per_pr
 
         split_groups = []
         for i in range(0, len(files), max_files):
@@ -216,8 +212,7 @@ class AtomicityValidator:
                 id=f"{group.id}_chunk_{i // max_files}",
                 files=chunk_files,
                 category=group.category,
-                confidence=group.confidence
-                * 0.8,  # Lower confidence for size-based split
+                confidence=group.confidence * 0.8,  # Lower confidence for size-based split
                 reasoning=f"Size-based split from {group.id}",
                 semantic_similarity=group.semantic_similarity,
             )

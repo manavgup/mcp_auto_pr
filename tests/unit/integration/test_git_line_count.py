@@ -22,9 +22,7 @@ async def test_debug_git_line_counts():
 
         # Set up git repository exactly like the failing test
         subprocess.run(["git", "init"], cwd=repo_path, check=True)
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)
         subprocess.run(
             ["git", "config", "user.email", "test@example.com"],
             cwd=repo_path,
@@ -36,9 +34,7 @@ async def test_debug_git_line_counts():
         test_file.write_text("print('Hello, world!')\n")
 
         subprocess.run(["git", "add", "test_file.py"], cwd=repo_path, check=True)
-        subprocess.run(
-            ["git", "commit", "-m", "Initial commit"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_path, check=True)
 
         # Modify and stage the file (exactly like the failing test)
         test_file.write_text("print('Hello, world!')\nprint('New line')\n")
@@ -57,9 +53,7 @@ async def test_debug_git_line_counts():
         print(f"git status --porcelain: '{result.stdout.strip()}'")
 
         # Check working directory diff (should be empty since file is staged)
-        result = subprocess.run(
-            ["git", "diff", "--numstat"], cwd=repo_path, capture_output=True, text=True
-        )
+        result = subprocess.run(["git", "diff", "--numstat"], cwd=repo_path, capture_output=True, text=True)
         print(f"git diff --numstat: '{result.stdout.strip()}'")
 
         # Check staged diff (should show the changes)
@@ -74,9 +68,7 @@ async def test_debug_git_line_counts():
 
         # Verify the staged diff shows the addition
         assert staged_numstat, "Staged diff should not be empty"
-        assert (
-            "1\t0\ttest_file.py" in staged_numstat
-        ), f"Expected '1\\t0\\ttest_file.py' but got '{staged_numstat}'"
+        assert "1\t0\ttest_file.py" in staged_numstat, f"Expected '1\\t0\\ttest_file.py' but got '{staged_numstat}'"
 
         # Check specific file status
         result = subprocess.run(
@@ -103,16 +95,12 @@ async def test_debug_git_line_counts():
             print(f"Filename: '{filename}'")
 
             # Verify parsing
-            assert (
-                index_status == "M"
-            ), f"Expected index status 'M' but got '{index_status}'"
+            assert index_status == "M", f"Expected index status 'M' but got '{index_status}'"
             assert working_status in [
                 None,
                 " ",
             ], f"Expected no working status but got '{working_status}'"
-            assert (
-                filename == "test_file.py"
-            ), f"Expected 'test_file.py' but got '{filename}'"
+            assert filename == "test_file.py", f"Expected 'test_file.py' but got '{filename}'"
 
             is_staged = bool(index_status) and index_status != "?"
             print(f"Is staged: {is_staged}")
@@ -122,8 +110,8 @@ async def test_debug_git_line_counts():
         print("\n=== Testing GitClient Implementation ===")
 
         try:
-            from mcp_shared_lib.config.git_analyzer import GitAnalyzerSettings
-            from mcp_shared_lib.services.git.git_client import GitClient
+            from mcp_local_repo_analyzer.config import GitAnalyzerSettings
+            from mcp_local_repo_analyzer.services.client import GitClient
 
             settings = GitAnalyzerSettings()
             git_client = GitClient(settings)
@@ -136,22 +124,14 @@ async def test_debug_git_line_counts():
             assert len(files) == 1, f"Expected 1 file but got {len(files)}"
 
             file_info = files[0]
-            assert (
-                file_info["filename"] == "test_file.py"
-            ), f"Expected 'test_file.py' but got '{file_info['filename']}'"
-            assert (
-                file_info["index_status"] == "M"
-            ), f"Expected index status 'M' but got '{file_info['index_status']}'"
+            assert file_info["filename"] == "test_file.py", f"Expected 'test_file.py' but got '{file_info['filename']}'"
+            assert file_info["index_status"] == "M", f"Expected index status 'M' but got '{file_info['index_status']}'"
 
             # Test get_diff_stats with different parameters
             for staged_param in [True, False, None]:
                 try:
-                    diff_stats = await git_client.get_diff_stats(
-                        repo_path, "test_file.py", staged=staged_param
-                    )
-                    print(
-                        f"GitClient.get_diff_stats(staged={staged_param}): {diff_stats}"
-                    )
+                    diff_stats = await git_client.get_diff_stats(repo_path, "test_file.py", staged=staged_param)
+                    print(f"GitClient.get_diff_stats(staged={staged_param}): {diff_stats}")
 
                     if staged_param in [True, None]:  # Should work for staged files
                         assert (
@@ -162,18 +142,14 @@ async def test_debug_git_line_counts():
                         ), f"Expected 0 lines deleted but got {diff_stats['lines_deleted']} with staged={staged_param}"
 
                 except Exception as e:
-                    print(
-                        f"GitClient.get_diff_stats(staged={staged_param}) failed: {e}"
-                    )
+                    print(f"GitClient.get_diff_stats(staged={staged_param}) failed: {e}")
                     if staged_param in [True, None]:  # These should not fail
                         raise
 
             print("\n=== Testing ChangeDetector ===")
 
-            from mcp_local_repo_analyzer.services.git.change_detector import (
-                ChangeDetector,
-            )
-            from mcp_shared_lib.models import LocalRepository
+            from mcp_local_repo_analyzer.models.repository import LocalRepository
+            from mcp_local_repo_analyzer.services.git.change_detector import ChangeDetector
 
             change_detector = ChangeDetector(git_client)
             repo_model = LocalRepository(
@@ -184,9 +160,7 @@ async def test_debug_git_line_counts():
             )
 
             # This is the method that should populate line counts correctly
-            working_changes = await change_detector.detect_working_directory_changes(
-                repo_model
-            )
+            working_changes = await change_detector.detect_working_directory_changes(repo_model)
 
             print(f"Working directory changes: {working_changes}")
 
@@ -206,12 +180,8 @@ async def test_simple_git_commands():
 
         # Initialize repo
         subprocess.run(["git", "init"], cwd=repo_path, check=True)
-        subprocess.run(
-            ["git", "config", "user.name", "Test"], cwd=repo_path, check=True
-        )
-        subprocess.run(
-            ["git", "config", "user.email", "test@test.com"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=repo_path, check=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=repo_path, check=True)
 
         # Create file
         (repo_path / "test.txt").write_text("line1\n")
@@ -232,6 +202,4 @@ async def test_simple_git_commands():
         output = result.stdout.strip()
 
         print(f"Git diff output: '{output}'")
-        assert (
-            "1\t0\ttest.txt" in output
-        ), f"Expected '1\\t0\\ttest.txt' but got '{output}'"
+        assert "1\t0\ttest.txt" in output, f"Expected '1\\t0\\ttest.txt' but got '{output}'"

@@ -1,0 +1,21 @@
+{
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        ".venv",
+        "tests"
+    ],
+    "pythonPath": ".venv/bin/python",
+    "pythonVersion": "3.12",
+    "typeCheckingMode": "basic",
+    "useLibraryCodeForTypes": true,
+    "autoImportCompletions": true,
+    "extraPaths": [
+        "src"
+    ],
+    "venvPath": ".",
+    "venv": ".venv"
+}
