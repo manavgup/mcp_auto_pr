@@ -1,5 +1,7 @@
 # MCP Auto PR System
 
+> **🎉 v0.2.0 - Monorepo Migration Complete!** Successfully consolidated 4 repositories into a unified monorepo structure. [See Migration Announcement](MIGRATION_ANNOUNCEMENT.md)
+
 **Intelligent PR boundary detection and recommendation system powered by Model Context Protocol (MCP)**
 
 Automatically analyzes outstanding code changes and generates atomic, logically-grouped pull request recommendations optimized for code review efficiency and deployment safety.
