@@ -26,9 +26,10 @@ git push origin pre-monorepo-backup
 ### Step 2: Create Directory Structure
 ```bash
 # In mcp_auto_pr directory
-mkdir -p src/{mcp_shared_lib,mcp_local_repo_analyzer,mcp_pr_recommender}
+mkdir -p src/{shared,mcp_local_repo_analyzer,mcp_pr_recommender}
+mkdir -p src/shared/{models,git,mcp,common,testing}
 mkdir -p tests/{unit,integration,performance,fixtures}
-mkdir -p tests/unit/{test_shared_lib,test_local_repo_analyzer,test_pr_recommender}
+mkdir -p tests/unit/{test_shared,test_local_repo_analyzer,test_pr_recommender}
 mkdir -p tests/integration/{test_mcp_servers,test_cross_package,test_end_to_end}
 mkdir -p docker/{analyzer,recommender,dev}
 mkdir -p docs/{api,architecture,guides,development}
@@ -41,7 +42,7 @@ mkdir -p config examples .devcontainer
 ```bash
 # Copy shared library (clean copy, no __pycache__)
 rsync -av --exclude='__pycache__' --exclude='*.pyc' \
-  ../mcp_shared_lib/src/mcp_shared_lib/ src/mcp_shared_lib/
+  ../mcp_shared_lib/src/mcp_shared_lib/ src/shared/
 
 # Copy analyzer (excluding duplicated shared lib)
 rsync -av --exclude='__pycache__' --exclude='*.pyc' \
@@ -59,7 +60,7 @@ rsync -av --exclude='__pycache__' --exclude='*.pyc' \
 ### Step 4: Consolidate Tests
 ```bash
 # Move test files preserving structure
-cp -r ../mcp_shared_lib/tests/* tests/unit/test_shared_lib/
+cp -r ../mcp_shared_lib/tests/* tests/unit/test_shared/
 cp -r ../mcp_local_repo_analyzer/tests/* tests/unit/test_local_repo_analyzer/
 cp -r ../mcp_pr_recommender/tests/* tests/unit/test_pr_recommender/
 
@@ -68,26 +69,82 @@ mkdir -p tests/fixtures
 cp -r ../mcp_*/tests/fixtures/* tests/fixtures/ 2>/dev/null || true
 ```
 
-### Step 5: Create Unified conftest.py
+### Step 5: Create Shared Server Base Class
 ```python
-# tests/conftest.py
-"""Unified pytest configuration for all packages."""
+# src/shared/mcp/server.py
+"""Shared MCP server functionality to eliminate code duplication."""
+
+import asyncio
 import sys
-from pathlib import Path
+import traceback
+from abc import ABC, abstractmethod
+from typing import Any, Dict
 
-# Add src to path for imports
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
+from fastmcp import FastMCP
 
-# Import and merge fixtures from all packages
-# ... (merge content from all conftest.py files)
+class BaseMCPServer(ABC):
+    """Abstract base class for MCP servers with shared functionality."""
+
+    @abstractmethod
+    def create_server(self) -> tuple[FastMCP, Dict[str, Any]]:
+        """Create and configure the FastMCP server."""
+        pass
+
+    @abstractmethod
+    def register_tools(self, mcp: FastMCP, services: Dict[str, Any]) -> None:
+        """Register MCP tools."""
+        pass
+
+    async def run_stdio_server(self) -> None:
+        """Run server in STDIO mode (shared implementation)."""
+        try:
+            logger.info("=== Starting Server (STDIO) ===")
+            logger.info(f"Python version: {sys.version}")
+
+            # Create server and services
+            mcp, services = self.create_server()
+
+            # Register tools
+            self.register_tools(mcp, services)
+
+            # Run the server
+            await mcp.run_stdio_async()
+
+        except (BrokenPipeError, EOFError, ConnectionResetError, KeyboardInterrupt):
+            logger.info("Server shutdown gracefully")
+        except Exception as e:
+            logger.error(f"Server error: {e}")
+            sys.exit(1)
+
+    def run_http_server(self, host: str = "127.0.0.1", port: int = 9070,
+                       transport: str = "streamable-http") -> None:
+        """Run server in HTTP mode (shared implementation)."""
+        try:
+            logger.info(f"=== Starting Server (HTTP) ===")
+            logger.info(f"🌐 Transport: {transport}")
+            logger.info(f"🌐 Endpoint: http://{host}:{port}/mcp")
+
+            # Create server and services
+            mcp, services = self.create_server()
+
+            # Register tools
+            self.register_tools(mcp, services)
+
+            # Create HTTP app and run
+            app = mcp.http_app(path="/mcp", transport=transport)
+            import uvicorn
+            uvicorn.run(app, host=host, port=port, log_level="info")
+
+        except Exception as e:
+            logger.error(f"HTTP server error: {e}")
+            sys.exit(1)
 ```
 
 ### Step 6: Update Import Paths
 ```bash
 # Update imports in all Python files
 find src -name "*.py" -type f -exec sed -i \
-  's/from mcp_shared_lib/from mcp_shared_lib/g' {} \;
+  's/from mcp_shared_lib/from shared/g' {} \;
 
 # Update test imports
 find tests -name "*.py" -type f -exec sed -i \
@@ -128,7 +185,7 @@ poetry install
 poetry run pytest tests/
 
 # Check imports
-poetry run python -c "import mcp_shared_lib"
+poetry run python -c "import shared"
 poetry run python -c "import mcp_local_repo_analyzer"
 poetry run python -c "import mcp_pr_recommender"
 
@@ -195,3 +252,7 @@ tar -xzf monorepo-backup-YYYYMMDD.tar.gz
 ### Git History
 **Problem**: Lost git history
 **Solution**: Use git subtree or git filter-branch to preserve history
+
+### Server Inheritance Issues
+**Problem**: MCP servers can't inherit from shared base class
+**Solution**: Ensure proper import paths and abstract method implementations

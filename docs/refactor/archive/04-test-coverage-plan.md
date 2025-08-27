@@ -10,7 +10,7 @@
 | mcp_shared_lib | 13.22% | 90% | 76.78% |
 
 ### Critical Gaps
-- **0% Coverage**: All CLI modules, tool implementations, transport layer
+- **0% Coverage**: All CLI modules, tool implementations, server startup logic
 - **<30% Coverage**: Service layers, main modules
 - **<50% Coverage**: Git utilities, file utilities
 
@@ -85,13 +85,13 @@ test_all_tools()
 
 ### mcp_shared_lib
 
-#### Transport Layer (0% → 90%)
+#### Shared Server Layer (0% → 90%)
 ```python
-test_stdio_transport()
-test_http_transport()
-test_websocket_transport()
-test_sse_transport()
-test_transport_factory()
+test_base_server_abstract_methods()
+test_stdio_server_common_logic()
+test_http_server_common_logic()
+test_server_error_handling()
+test_server_lifecycle_management()
 ```
 
 #### Utilities (15-79% → 90%)
@@ -132,17 +132,15 @@ test_logging_configuration()
 ```
 tests/
 ├── unit/
-│   ├── test_shared_lib/
+│   ├── test_shared/
 │   │   ├── test_models/
 │   │   │   ├── test_git_models.py
 │   │   │   ├── test_analysis_models.py
 │   │   │   └── test_base_models.py
 │   │   ├── test_services/
 │   │   │   └── test_git_client.py
-│   │   ├── test_transports/
-│   │   │   ├── test_stdio.py
-│   │   │   ├── test_http.py
-│   │   │   └── test_websocket.py
+│   │   ├── test_mcp/
+│   │   │   └── test_server.py
 │   │   └── test_utils/
 │   │       ├── test_file_utils.py
 │   │       └── test_git_utils.py
@@ -244,6 +242,26 @@ async def test_async_operation():
 ])
 def test_multiple_cases(input, expected):
     assert process(input) == expected
+```
+
+### Server Testing
+```python
+@pytest.fixture
+def mock_mcp_server():
+    """Create a mock MCP server for testing."""
+    class MockServer(BaseMCPServer):
+        def create_server(self):
+            return Mock(), {}
+
+        def register_tools(self, mcp, services):
+            pass
+
+    return MockServer()
+
+def test_server_stdio_mode(mock_mcp_server):
+    """Test STDIO server mode."""
+    # Test server startup and shutdown
+    pass
 ```
 
 ## Coverage Reporting

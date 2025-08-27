@@ -16,7 +16,7 @@ readme = "README.md"
 license = "MIT"
 repository = "https://github.com/manavgup/mcp_auto_pr"
 packages = [
-    {include = "mcp_shared_lib", from = "src"},
+    {include = "shared", from = "src"},
     {include = "mcp_local_repo_analyzer", from = "src"},
     {include = "mcp_pr_recommender", from = "src"}
 ]
@@ -49,7 +49,7 @@ version = "0.2.0"
 description = "MCP server for analyzing git changes"
 packages = [
     {include = "mcp_local_repo_analyzer", from = "src"},
-    {include = "mcp_shared_lib", from = "src"}
+    {include = "shared", from = "src"}
 ]
 # Package-specific metadata
 ```
@@ -62,7 +62,7 @@ version = "0.2.0"
 description = "AI-powered PR recommendation MCP server"
 packages = [
     {include = "mcp_pr_recommender", from = "src"},
-    {include = "mcp_shared_lib", from = "src"}
+    {include = "shared", from = "src"}
 ]
 # Package-specific metadata
 ```
@@ -86,9 +86,9 @@ def build_package(name, includes):
 
 # Build each package
 build_package("mcp-local-repo-analyzer",
-              ["mcp_local_repo_analyzer", "mcp_shared_lib"])
+              ["mcp_local_repo_analyzer", "shared"])
 build_package("mcp-pr-recommender",
-              ["mcp_pr_recommender", "mcp_shared_lib"])
+              ["mcp_pr_recommender", "shared"])
 ```
 
 ## Publishing Workflow
@@ -238,6 +238,7 @@ pip install dist/mcp_pr_recommender-0.2.0-py3-none-any.whl
 # Test imports
 python -c "import mcp_local_repo_analyzer"
 python -c "import mcp_pr_recommender"
+python -c "import shared"
 
 # Test CLI
 mcp-analyzer --help
@@ -305,3 +306,7 @@ pip install --index-url https://test.pypi.org/simple/ \
 #### Build Failures
 **Problem**: Poetry build fails
 **Solution**: Clear build cache, verify pyproject.toml syntax
+
+#### Shared Package Issues
+**Problem**: Shared package not found in installed packages
+**Solution**: Ensure shared package is included in both analyzer and recommender builds
